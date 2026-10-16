@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Help & Guidance - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container" style="max-width: 900px;">
+      <div class="section-title">
+        <h2>Help & Platform Guidance</h2>
+        <p>Step-by-step assistance for patients and medical practitioners.</p>
+      </div>
+
+      <!-- Emergency Hotline Alert -->
+      <div class="alert alert-danger" style="margin-bottom: 2rem;">
+        <i class="fas fa-ambulance" style="font-size: 1.5rem;"></i>
+        <div>
+          <strong>Medical Emergency Notice:</strong> If you or someone around you requires emergency medical treatment, please do not use this web platform. Call immediate local emergency services:
+          <div style="margin-top: 0.5rem; font-weight: 700;">
+            National Emergency: 112 &bull; Ambulance: 102 &bull; Women Helpline: 1091
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom: 2rem;">
+        <!-- Patient Guide -->
+        <div class="card">
+          <div class="icon-box">
+            <i class="fas fa-user"></i>
+          </div>
+          <h3>Patient User Guide</h3>
+          <ul style="padding-left: 1.25rem; margin-top: 0.75rem; color: var(--text-secondary); line-height: 1.8;">
+            <li><strong>Create an Account:</strong> Register with basic information.</li>
+            <li><strong>Search Doctors:</strong> Filter by specialization, city, and consultation fee.</li>
+            <li><strong>Select a Slot:</strong> Real-time available slots calculated from doctor schedule.</li>
+            <li><strong>Manage Bookings:</strong> View upcoming visits and cancel if needed from your dashboard.</li>
+          </ul>
+          <div style="margin-top: 1.5rem;">
+            <a href="appointments.html" class="btn btn-primary btn-sm" style="width: 100%;">Book an Appointment</a>
+          </div>
+        </div>
+
+        <!-- Doctor Guide -->
+        <div class="card">
+          <div class="icon-box">
+            <i class="fas fa-user-md"></i>
+          </div>
+          <h3>Doctor Verification Guide</h3>
+          <ul style="padding-left: 1.25rem; margin-top: 0.75rem; color: var(--text-secondary); line-height: 1.8;">
+            <li><strong>Register Profile:</strong> Provide qualifications, specialty, and clinic details.</li>
+            <li><strong>Upload Certificate:</strong> Attach medical degree/registration (PDF/JPG/PNG &le; 5MB).</li>
+            <li><strong>Admin Audit:</strong> Platform administrator reviews the document in secure portal.</li>
+            <li><strong>Go Live:</strong> Once verified, your weekly schedule unlocks for patient bookings.</li>
+          </ul>
+          <div style="margin-top: 1.5rem;">
+            <a href="register.html" class="btn btn-secondary btn-sm" style="width: 100%;">Register as a Doctor</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Need More Assistance Card -->
+      <div class="card" style="text-align: center; padding: 2.5rem; background: var(--light-green); border-color: var(--border-color);">
+        <i class="fas fa-headset" style="font-size: 2.5rem; color: var(--primary-green); margin-bottom: 1rem;"></i>
+        <h3>Still Have Questions?</h3>
+        <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 1.5rem auto;">
+          Our support team welcomes feedback and service inquiries.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <a href="contact.html" class="btn btn-primary">Contact Support</a>
+          <a href="feedback.html" class="btn btn-outline">Submit Feedback</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar();
+      HealthHub.renderFooter();
+    });
+  </script>
+</body>
+</html>

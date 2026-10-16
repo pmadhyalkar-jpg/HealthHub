@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Appointment - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .slot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .slot-pill {
+      padding: 0.65rem 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      background: #FFFFFF;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-main);
+    }
+    .slot-pill:hover:not(.booked) {
+      border-color: var(--primary-green);
+      background: var(--light-green);
+      color: var(--dark-green);
+    }
+    .slot-pill.selected {
+      background: var(--primary-green);
+      color: #FFFFFF;
+      border-color: var(--primary-green);
+    }
+    .slot-pill.booked {
+      background: #F3F4F6;
+      color: #9CA3AF;
+      border-color: #E5E7EB;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+  </style>
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container" style="max-width: 840px;">
+      <div class="section-title">
+        <h2>Schedule a Consultation</h2>
+        <p>Choose a verified doctor, select an available time, then complete the secure-looking test checkout. No real money is collected.</p>
+      </div>
+
+      <div id="auth-warning" style="display: none;" class="alert alert-warning">
+        <i class="fas fa-user-lock"></i>
+        <div>
+          <strong>Authentication Required:</strong> You must be signed in as a patient to reserve a slot.
+          <a href="login.html" style="font-weight: 700; text-decoration: underline; margin-left: 0.5rem;">Sign in here</a> or <a href="register.html">create an account</a>.
+        </div>
+      </div>
+
+      <div id="alert-container"></div>
+
+      <div class="card" style="box-shadow: var(--shadow-lg);">
+        <form id="booking-form">
+          <!-- Step 1: Doctor Selection -->
+          <div class="form-group">
+            <label for="doctor-select" class="form-label">Select Verified Practitioner <span style="color: var(--danger)">*</span></label>
+            <select id="doctor-select" class="form-select" required>
+              <option value="">-- Choose a doctor --</option>
+            </select>
+          </div>
+
+          <!-- Doctor Summary Badge -->
+          <div id="doctor-summary" style="display: none; padding: 1rem; background: var(--light-green); border-radius: var(--radius-md); margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <strong id="doc-name" style="color: var(--dark-green); font-size: 1.05rem;"></strong>
+                <div id="doc-details" style="font-size: 0.875rem; color: var(--text-secondary);"></div>
+              </div>
+              <div style="font-size: 1.15rem; font-weight: 700; color: var(--primary-green);" id="doc-fee"></div>
+            </div>
+          </div>
+
+          <!-- Step 2: Date Selection -->
+          <div class="form-group">
+            <label for="appointment-date" class="form-label">Consultation Date <span style="color: var(--danger)">*</span></label>
+            <input type="date" id="appointment-date" class="form-control" required>
+            <div class="form-text">Choose a date to view live availability slots for this practitioner.</div>
+          </div>
+
+          <!-- Step 3: Slots Container -->
+          <div class="form-group">
+            <label class="form-label">Available Time Slots <span style="color: var(--danger)">*</span></label>
+            <div id="slots-container">
+              <div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); background: #F9FAFB; border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+                Please select a doctor and date to view real-time available consultation slots.
+              </div>
+            </div>
+            <input type="hidden" id="selected-time" required>
+          </div>
+
+          <!-- Step 4: Reason for Visit -->
+          <div class="form-group">
+            <label for="reason" class="form-label">Reason for Consultation (Optional)</label>
+            <input type="text" id="reason" class="form-control" placeholder="e.g. Routine checkup, joint pain consultation, skin review">
+            <div class="form-text">General topic only. Please do not submit unnecessary sensitive clinical data.</div>
+          </div>
+
+          <button type="submit" id="book-btn" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;" disabled>
+            <i class="fas fa-calendar-check"></i> Continue to Checkout
+          </button>
+        </form>
+      </div>
+
+      <!-- Success Confirmation Modal / Card -->
+      <div id="success-card" class="card" style="display: none; margin-top: 2rem; border-color: var(--success); background: #F0FDF4;">
+        <div style="text-align: center; padding: 1.5rem;">
+          <div class="icon-box" style="margin: 0 auto 1rem auto; background: #DCFCE7; color: var(--success);">
+            <i class="fas fa-check"></i>
+          </div>
+          <h3 style="color: #166534;">Appointment Confirmed!</h3>
+          <p style="color: #15803D; margin-top: 0.5rem;" id="success-details"></p>
+          <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center;">
+            <a href="patient-dashboard.html" class="btn btn-primary btn-sm">View in Patient Dashboard</a>
+            <button onclick="resetBooking()" class="btn btn-outline btn-sm">Book Another</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    let doctorsList = [];
+    let currentUser = null;
+
+    async function checkAuth() {
+      currentUser = await HealthHub.getCurrentUser();
+      const authWarn = document.getElementById('auth-warning');
+      const bookBtn = document.getElementById('book-btn');
+
+      if (!currentUser || currentUser.role !== 'patient') {
+        authWarn.style.display = 'flex';
+      } else {
+        authWarn.style.display = 'none';
+      }
+    }
+
+    async function loadDoctorsDropdown() {
+      try {
+        const res = await HealthHub.request('/api/doctors?verified_only=true');
+        doctorsList = res.doctors || [];
+
+        const select = document.getElementById('doctor-select');
+        select.innerHTML = '<option value="">-- Choose an accredited doctor --</option>';
+
+        doctorsList.forEach(doc => {
+          const opt = document.createElement('option');
+          opt.value = doc.id;
+          opt.textContent = `${doc.name} - ${doc.specialization} (${doc.city}) - ₹${doc.consultation_fee}`;
+          select.appendChild(opt);
+        });
+
+        // Pre-select if doctor_id in URL
+        const urlDocId = HealthHub.getUrlParam('doctor_id');
+        if (urlDocId) {
+          select.value = urlDocId;
+          onDoctorChange();
+        }
+      } catch (err) {
+        HealthHub.renderAlert('danger', 'Failed loading doctors from database.');
+      }
+    }
+
+    function onDoctorChange() {
+      const select = document.getElementById('doctor-select');
+      const docId = parseInt(select.value, 10);
+      const summary = document.getElementById('doctor-summary');
+
+      const doc = doctorsList.find(d => d.id === docId);
+      if (doc) {
+        summary.style.display = 'block';
+        document.getElementById('doc-name').textContent = doc.name;
+        document.getElementById('doc-details').textContent = `${doc.specialization} | ${doc.qualification} | ${doc.city} (${doc.available_days})`;
+        document.getElementById('doc-fee').textContent = `₹${doc.consultation_fee.toFixed(2)}`;
+      } else {
+        summary.style.display = 'none';
+      }
+
+      loadSlots();
+    }
+
+    async function loadSlots() {
+      const docId = document.getElementById('doctor-select').value;
+      const dateVal = document.getElementById('appointment-date').value;
+      const slotsContainer = document.getElementById('slots-container');
+      const bookBtn = document.getElementById('book-btn');
+      document.getElementById('selected-time').value = '';
+
+      if (!docId || !dateVal) {
+        slotsContainer.innerHTML = `
+          <div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); background: #F9FAFB; border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+            Please select both a doctor and a date to view available slots.
+          </div>
+        `;
+        bookBtn.disabled = true;
+        return;
+      }
+
+      slotsContainer.innerHTML = `
+        <div style="text-align: center; padding: 1.5rem;">
+          <div class="loading-spinner"></div>
+          <p style="margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">Calculating slots from database...</p>
+        </div>
+      `;
+
+      try {
+        const res = await HealthHub.request(`/api/appointments/slots?doctor_id=${docId}&date=${dateVal}`);
+        const slots = res.slots || [];
+
+        if (slots.length === 0) {
+          slotsContainer.innerHTML = `
+            <div class="alert alert-info" style="margin-bottom: 0;">
+              <i class="fas fa-calendar-times"></i>
+              <div>${res.message || 'No consultation slots available for this doctor on the selected date.'}</div>
+            </div>
+          `;
+          bookBtn.disabled = true;
+          return;
+        }
+
+        let html = '<div class="slot-grid">';
+        slots.forEach(s => {
+          if (s.available) {
+            html += `<div class="slot-pill" onclick="selectSlot(this, '${s.time}')">${s.time}</div>`;
+          } else {
+            html += `<div class="slot-pill booked" title="Already booked">${s.time}</div>`;
+          }
+        });
+        html += '</div>';
+        slotsContainer.innerHTML = html;
+
+      } catch (err) {
+        slotsContainer.innerHTML = `
+          <div class="alert alert-danger" style="margin-bottom: 0;">
+            <i class="fas fa-exclamation-circle"></i>
+            <div>${err.message || 'Error checking availability slots.'}</div>
+          </div>
+        `;
+        bookBtn.disabled = true;
+      }
+    }
+
+    function selectSlot(element, time) {
+      document.querySelectorAll('.slot-pill').forEach(el => el.classList.remove('selected'));
+      element.classList.add('selected');
+      document.getElementById('selected-time').value = time;
+      
+      if (currentUser && currentUser.role === 'patient') {
+        document.getElementById('book-btn').disabled = false;
+      }
+    }
+
+    function resetBooking() {
+      document.getElementById('success-card').style.display = 'none';
+      document.getElementById('booking-form').style.display = 'block';
+      document.getElementById('booking-form').reset();
+      document.getElementById('doctor-summary').style.display = 'none';
+      document.getElementById('slots-container').innerHTML = `
+        <div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); background: #F9FAFB; border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+          Please select a doctor and date to view real-time available consultation slots.
+        </div>
+      `;
+      document.getElementById('book-btn').disabled = true;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar('appointments');
+      HealthHub.renderFooter();
+
+      // Set min date to today
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('appointment-date').min = todayStr;
+
+      checkAuth();
+      loadDoctorsDropdown();
+
+      document.getElementById('doctor-select').addEventListener('change', onDoctorChange);
+      document.getElementById('appointment-date').addEventListener('change', loadSlots);
+
+      document.getElementById('booking-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        HealthHub.clearAlert();
+
+        if (!currentUser || currentUser.role !== 'patient') {
+          window.location.href = 'login.html';
+          return;
+        }
+
+        const docId = parseInt(document.getElementById('doctor-select').value, 10);
+        const dateVal = document.getElementById('appointment-date').value;
+        const timeVal = document.getElementById('selected-time').value;
+        const reason = document.getElementById('reason').value.trim();
+
+        if (!timeVal) {
+          HealthHub.renderAlert('danger', 'Please click on an available time slot above.');
+          return;
+        }
+
+        const submitBtn = document.getElementById('book-btn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading-spinner" style="width: 1.2rem; height: 1.2rem; border-width: 2px;"></span> Preparing Checkout...';
+
+        try {
+          const res = await HealthHub.request('/api/payments/prepare', {
+            method: 'POST',
+            body: JSON.stringify({
+              doctor_id: docId,
+              date: dateVal,
+              time: timeVal,
+              reason: reason
+            })
+          });
+
+          window.location.href = res.redirect;
+        } catch (err) {
+          HealthHub.renderAlert('danger', err.message || 'Failed to book slot.');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-calendar-check"></i> Continue to Checkout';
+          loadSlots(); // refresh slots to reflect if slot was taken
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vitamins & Minerals - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Vitamins & Minerals Guide</h2>
+        <p>Evidence-based nutritional awareness covering essential micronutrients, dietary sources, functions, and deficiency signs.</p>
+      </div>
+
+      <div class="alert alert-warning" style="margin-bottom: 2rem;">
+        <i class="fas fa-apple-alt"></i>
+        <div>
+          <strong>Nutritional Notice:</strong> HealthHub provides dietary education only and does not diagnose nutritional deficiencies or prescribe pharmacological supplements. Always consult a physician or registered dietitian before beginning standalone high-dose vitamin supplements.
+        </div>
+      </div>
+
+      <div id="vitamins-grid" class="grid-2">
+        <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+          <div class="loading-spinner"></div>
+          <p style="margin-top: 1rem; color: var(--text-secondary);">Querying nutritional records from MySQL...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    async function loadVitamins() {
+      const grid = document.getElementById('vitamins-grid');
+      try {
+        const res = await HealthHub.request('/api/content/vitamins');
+        const items = res.vitamins_minerals || [];
+
+        if (items.length === 0) {
+          grid.innerHTML = '<div class="state-container" style="grid-column: 1/-1;"><p>No nutrient records found.</p></div>';
+          return;
+        }
+
+        grid.innerHTML = items.map(v => `
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+              <h3 style="font-size: 1.25rem;">${escapeHtml(v.name)}</h3>
+              <span class="badge badge-specialty">${escapeHtml(v.nutrient_type)}</span>
+            </div>
+
+            <p style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 1rem;">
+              ${escapeHtml(v.function_description)}
+            </p>
+
+            <div style="margin-bottom: 0.85rem; background: var(--light-green); padding: 0.85rem; border-radius: var(--radius-md);">
+              <strong style="color: var(--dark-green); font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">
+                <i class="fas fa-carrot"></i> Natural Food Sources:
+              </strong>
+              <div style="font-size: 0.875rem; color: var(--text-main);">
+                ${escapeHtml(v.food_sources)}
+              </div>
+            </div>
+
+            <div style="margin-bottom: 0.85rem; background: #FEF3C7; padding: 0.85rem; border-radius: var(--radius-md); border: 1px solid #FDE68A;">
+              <strong style="color: #B45309; font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">
+                <i class="fas fa-exclamation-circle"></i> Deficiency Indicators:
+              </strong>
+              <div style="font-size: 0.875rem; color: #78350F;">
+                ${escapeHtml(v.deficiency_symptoms)}
+              </div>
+            </div>
+
+            <div style="background: #F8FAFC; padding: 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-top: auto;">
+              <strong style="color: var(--text-main); font-size: 0.875rem; display: block; margin-bottom: 0.25rem;">
+                <i class="fas fa-check"></i> Cautious Dietary Guidance:
+              </strong>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                ${escapeHtml(v.safe_guidance)}
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        grid.innerHTML = '<div class="alert alert-danger" style="grid-column: 1/-1;">Error loading vitamins from MySQL.</div>';
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar('vitamins');
+      HealthHub.renderFooter();
+      loadVitamins();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yoga & Meditation - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .pose-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .pose-header {
+      margin-bottom: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Yoga & Meditation Practices</h2>
+        <p>Explore gentle yoga and breathing practices with illustrated steps, safety notes, and guided video searches.</p>
+      </div>
+
+      <div class="alert alert-info" style="margin-bottom: 2rem;">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <strong>Practice Mindfully:</strong> Move gently within your comfortable range of motion. Never force a posture into sharp joint or spinal pain. If you have existing medical conditions or injuries, consult your doctor before starting any physical regimen.
+        </div>
+      </div>
+
+      <div id="yoga-grid" class="grid-3">
+        <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+          <div class="loading-spinner"></div>
+          <p style="margin-top: 1rem; color: var(--text-secondary);">Loading yoga practices from database...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    const yogaGuides = {
+      mountain: { image:'assets/images/yoga/mountain.jpeg', steps:['Stand tall with feet grounded and weight evenly distributed.','Lengthen your spine and relax your shoulders.','Let arms rest by your sides; breathe slowly for 5–8 breaths.'], video:'https://www.youtube.com/results?search_query=Mountain+Pose+Tadasana+beginner+yoga' },
+      child: { image:'assets/images/yoga/child.jpeg', steps:['Kneel on a comfortable mat and bring big toes together.','Ease hips toward heels and fold forward only as far as comfortable.','Rest arms forward or beside the body; breathe gently.'], video:'https://www.youtube.com/results?search_query=Child+Pose+Balasana+beginner+yoga' },
+      cat: { image:'assets/images/yoga/cat-cow.jpeg', steps:['Come onto hands and knees, wrists below shoulders.','Exhale and gently round the back without forcing the neck.','Inhale and lengthen the spine, moving slowly between positions.'], video:'https://www.youtube.com/results?search_query=Cat+Cow+pose+beginner+yoga' },
+      cobra: { image:'assets/images/yoga/cobra.jpeg', steps:['Lie on your stomach with palms near the ribs.','Keep elbows close and gently lift the chest using back muscles.','Keep the pelvis grounded; lower slowly if there is any back discomfort.'], video:'https://www.youtube.com/results?search_query=Low+Cobra+Pose+Bhujangasana+beginner+yoga' },
+      tree: { image:'assets/images/yoga/tree.jpeg', steps:['Stand tall and focus on a steady point.','Place one foot on the inner calf or thigh, never directly on the knee.','Bring hands together if comfortable and switch sides.'], video:'https://www.youtube.com/results?search_query=Tree+Pose+Vrksasana+beginner+yoga' },
+      savasana: { image:'assets/images/yoga/savasana.jpeg', steps:['Lie on your back with legs comfortably apart.','Let arms rest by your sides with palms facing up.','Relax the face and breathe naturally for 2–5 minutes.'], video:'https://www.youtube.com/results?search_query=Savasana+guided+relaxation+yoga' },
+      breath: { image:'assets/images/yoga/breathing.jpeg', steps:['Sit comfortably with the spine supported.','Breathe in gently through the nose without straining.','Exhale slowly and naturally; stop if you feel dizzy or uncomfortable.'], video:'https://www.youtube.com/results?search_query=gentle+diaphragmatic+breathing+beginner' }
+    };
+    function guideFor(title) {
+      const t = (title || '').toLowerCase();
+      if (t.includes('child') || t.includes('balasana')) return yogaGuides.child;
+      if (t.includes('cat') || t.includes('cow')) return yogaGuides.cat;
+      if (t.includes('cobra') || t.includes('bhujang')) return yogaGuides.cobra;
+      if (t.includes('tree') || t.includes('vrik')) return yogaGuides.tree;
+      if (t.includes('savasana') || t.includes('corpse') || t.includes('relax')) return yogaGuides.savasana;
+      if (t.includes('breath') || t.includes('meditation') || t.includes('pranayama')) return yogaGuides.breath;
+      return yogaGuides.mountain;
+    }
+
+    async function loadYoga() {
+      const grid = document.getElementById('yoga-grid');
+      try {
+        const res = await HealthHub.request('/api/content/yoga');
+        let poses = res.yoga_poses || [];
+        if (!poses.length) {
+          poses = [
+            {title:'Mountain Pose (Tadasana)',category:'Standing',difficulty:'Beginner',description:'A grounding posture that encourages upright alignment and steady breathing.',benefits:'Posture awareness, balance, mindful breathing.',safety_notes:'Stand near a wall if balance is difficult.',video_url:''},
+            {title:"Child’s Pose (Balasana)",category:'Restorative',difficulty:'Beginner',description:'A gentle resting pose that can help you pause between movements.',benefits:'Relaxation and gentle back/hip mobility.',safety_notes:'Avoid forcing the hips down; use a cushion if needed.',video_url:''},
+            {title:'Cat-Cow',category:'Mobility',difficulty:'Beginner',description:'A slow spinal movement coordinated with comfortable breathing.',benefits:'Gentle spinal mobility and body awareness.',safety_notes:'Move within a pain-free range; pad the knees.',video_url:''},
+            {title:'Cobra Pose (Bhujangasana)',category:'Backbend',difficulty:'Beginner',description:'A gentle chest-opening movement with a low lift.',benefits:'Upper-body awareness and gentle extension.',safety_notes:'Keep the lift small and stop with back pain.',video_url:''},
+            {title:'Tree Pose (Vrksasana)',category:'Balance',difficulty:'Beginner',description:'A standing balance posture with a supported variation.',benefits:'Balance and concentration.',safety_notes:'Use a wall for support and never press the foot against the knee.',video_url:''},
+            {title:'Savasana',category:'Restorative',difficulty:'Beginner',description:'A relaxed resting posture to settle the body after movement.',benefits:'Relaxation and calm breathing.',safety_notes:'Use a pillow under the knees if your lower back feels strained.',video_url:''},
+            {title:'Gentle Breathing',category:'Breathwork',difficulty:'Beginner',description:'Easy, unforced breathing while seated comfortably.',benefits:'Breath awareness and relaxation.',safety_notes:'Do not hold your breath or force deep breathing; stop if dizzy.',video_url:''}
+          ];
+        }
+        grid.innerHTML = poses.map(p => {
+          const guide = guideFor(p.title);
+          const steps = (p.steps || '').split(/\r?\n|\|/).map(x=>x.trim()).filter(Boolean);
+          const displaySteps = steps.length ? steps : guide.steps;
+          const video = /^https:\/\/www\.youtube\.com\//i.test(p.video_url || '') ? p.video_url : guide.video;
+          const image = guide.image;
+          return `<article class="card pose-card" style="overflow:hidden;">
+            <img
+    src="${image}"
+    alt="${escapeHtml(p.title)}"
+    loading="lazy"
+    style="display:block;width:100%;height:210px;object-fit:contain;background:#e8f7f1;"
+>
+            <div style="padding:1.2rem;display:flex;flex-direction:column;flex:1;">
+              <div style="display:flex;justify-content:space-between;gap:.5rem;flex-wrap:wrap;margin-bottom:.65rem;"><span class="badge badge-specialty">${escapeHtml(p.category)}</span><span class="badge badge-verified">${escapeHtml(p.difficulty)}</span></div>
+              <h3 style="font-size:1.2rem;margin-bottom:.6rem;">${escapeHtml(p.title)}</h3>
+              <p style="color:var(--text-secondary);margin-bottom:1rem;">${escapeHtml(p.description)}</p>
+              <h4 style="margin-bottom:.5rem;color:var(--dark-green);"><i class="fas fa-list-ol"></i> Steps</h4>
+              <ol style="padding-left:1.25rem;margin-bottom:1rem;">${displaySteps.map(step=>`<li style="margin-bottom:.4rem;">${escapeHtml(step)}</li>`).join('')}</ol>
+              <div style="background:var(--light-green);padding:.85rem;border-radius:var(--radius-md);margin-bottom:.75rem;"><strong><i class="fas fa-heart"></i> Benefits</strong><p style="margin:.3rem 0 0;">${escapeHtml(p.benefits)}</p></div>
+              <div style="background:#fffbeb;padding:.85rem;border:1px solid #fde68a;border-radius:var(--radius-md);margin-bottom:1rem;"><strong style="color:#92400e;"><i class="fas fa-shield-alt"></i> Safety</strong><p style="margin:.3rem 0 0;color:#78350f;">${escapeHtml(p.safety_notes)}</p></div>
+              <a href="${video}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="margin-top:auto;width:100%;"><i class="fab fa-youtube"></i> Watch tutorial on YouTube</a>
+            </div></article>`;
+        }).join('');
+      } catch (err) {
+        grid.innerHTML = '<div class="alert alert-danger" style="grid-column:1/-1;">Yoga guidance could not be loaded. Please check the database connection or refresh the page.</div>';
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar('yoga');
+      HealthHub.renderFooter();
+      loadYoga();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container" style="max-width: 650px;">
+      <div class="section-title">
+        <h2>Get in Touch with HealthHub</h2>
+        <p>Have an inquiry about general questions, doctor onboarding, or technical support? Submit a message below.</p>
+      </div>
+
+      <div id="alert-container"></div>
+
+      <div>
+        <!-- Contact Form -->
+        <div class="card" style="box-shadow: var(--shadow-md);">
+          <form id="contact-form">
+            <div class="form-group">
+              <label for="name" class="form-label">Your Name <span style="color: var(--danger)">*</span></label>
+              <input type="text" id="name" class="form-control" placeholder="e.g. Supriya Nanganure" required>
+            </div>
+
+            <div class="form-group">
+              <label for="email" class="form-label">Email Address <span style="color: var(--danger)">*</span></label>
+              <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
+            </div>
+
+            <div class="form-group">
+              <label for="subject" class="form-label">Subject <span style="color: var(--danger)">*</span></label>
+              <input type="text" id="subject" class="form-control" placeholder="e.g. Doctor registration query" required>
+            </div>
+
+            <div class="form-group">
+              <label for="message" class="form-label">Message Details <span style="color: var(--danger)">*</span></label>
+              <textarea id="message" class="form-control" rows="4" placeholder="Type your inquiry here (minimum 10 characters)..." required minlength="10"></textarea>
+            </div>
+
+            <button type="submit" id="send-btn" class="btn btn-primary" style="width: 100%;">
+              <i class="fas fa-paper-plane"></i> Send Message
+            </button>
+          </form>
+        </div>
+
+        
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar();
+      HealthHub.renderFooter();
+
+      const form = document.getElementById('contact-form');
+      const sendBtn = document.getElementById('send-btn');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        HealthHub.clearAlert();
+
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const subject = document.getElementById('subject').value.trim();
+        const message = document.getElementById('message').value.trim();
+
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<span class="loading-spinner" style="width: 1.2rem; height: 1.2rem; border-width: 2px;"></span> Saving to MySQL...';
+
+        try {
+          const res = await HealthHub.request('/api/contact', {
+            method: 'POST',
+            body: JSON.stringify({ name, email, subject, message })
+          });
+
+          HealthHub.renderAlert('success', res.message || 'Your inquiry has been successfully recorded in the database!');
+          form.reset();
+        } catch (err) {
+          HealthHub.renderAlert('danger', err.message || 'Failed to submit message.');
+        } finally {
+          sendBtn.disabled = false;
+          sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Message';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

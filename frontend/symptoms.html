@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Symptom Guidance - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Educational Symptom Guidance</h2>
+        <p>Learn about common physiological symptoms, supportive self-care habits, and critical red-flag warning signs that require urgent clinical attention.</p>
+      </div>
+
+      <!-- Critical Non-Diagnostic Medical Notice -->
+      <div class="alert alert-warning" style="margin-bottom: 2rem;">
+        <i class="fas fa-shield-alt" style="font-size: 1.5rem;"></i>
+        <div>
+          <strong>Medical Notice & Educational Boundary:</strong> HealthHub does not provide disease diagnosis, automated specialist matching, or treatment prescriptions. This directory is strictly informational. If you experience acute chest tightness, breathlessness, or neurological changes, seek immediate emergency hospital care.
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:1.5rem;padding:1rem;">
+        <label for="symptom-search" class="form-label"><i class="fas fa-search"></i> Search symptoms and guidance</label>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+          <input id="symptom-search" class="form-control" type="search" placeholder="Try headache, fatigue, fever…" style="flex:1;min-width:220px;">
+          <button class="btn btn-primary" id="symptom-search-btn" type="button">Search</button>
+          <button class="btn btn-outline" id="symptom-clear-btn" type="button">Clear</button>
+        </div>
+      </div>
+
+      <div id="symptoms-grid" class="grid-2">
+        <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+          <div class="loading-spinner"></div>
+          <p style="margin-top: 1rem; color: var(--text-secondary);">Retrieving educational symptom guides from MySQL...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    async function loadSymptoms() {
+      const q = document.getElementById('symptom-search')?.value.trim() || '';
+      const grid = document.getElementById('symptoms-grid');
+      try {
+        const res = await HealthHub.request('/api/content/symptoms' + (q ? '?q=' + encodeURIComponent(q) : ''));
+        const symptoms = res.symptoms || [];
+
+        if (symptoms.length === 0) {
+          grid.innerHTML = '<div class="state-container" style="grid-column: 1/-1;"><p>No symptom topics currently available.</p></div>';
+          return;
+        }
+
+        grid.innerHTML = symptoms.map(s => `
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+              <h3 style="font-size: 1.25rem;">${escapeHtml(s.title)}</h3>
+              <span class="badge badge-specialty">${escapeHtml(s.category)}</span>
+            </div>
+
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.25rem;">
+              ${escapeHtml(s.description)}
+            </p>
+
+            <div style="margin-bottom: 1.25rem; background: var(--light-green); padding: 1rem; border-radius: var(--radius-md); border-left: 4px solid var(--primary-green);">
+              <strong style="color: var(--dark-green); display: block; margin-bottom: 0.35rem;">
+                <i class="fas fa-hand-holding-heart"></i> Supportive Self-Care Tips:
+              </strong>
+              <div style="font-size: 0.9rem; color: var(--text-main);">
+                ${escapeHtml(s.self_care_guidance)}
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1.25rem; background: #FEF2F2; padding: 1rem; border-radius: var(--radius-md); border-left: 4px solid var(--danger);">
+              <strong style="color: #991B1B; display: block; margin-bottom: 0.35rem;">
+                <i class="fas fa-exclamation-triangle"></i> Emergency Warning Signs (Red Flags):
+              </strong>
+              <div style="font-size: 0.875rem; color: #7F1D1D;">
+                ${escapeHtml(s.warning_signs)}
+              </div>
+            </div>
+
+            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: auto; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+              <em><i class="fas fa-info-circle"></i> ${escapeHtml(s.disclaimer)}</em>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (e) {
+        grid.innerHTML = `
+          <div class="alert alert-danger" style="grid-column: 1/-1;">
+            Failed to load symptom records from database.
+          </div>
+        `;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar('symptoms');
+      HealthHub.renderFooter();
+      loadSymptoms();
+      document.getElementById('symptom-search-btn').addEventListener('click', loadSymptoms);
+      document.getElementById('symptom-clear-btn').addEventListener('click', () => { document.getElementById('symptom-search').value=''; loadSymptoms(); });
+      document.getElementById('symptom-search').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); loadSymptoms(); } });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .admin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2><i class="fas fa-shield-alt" style="color: var(--primary-green);"></i> HealthHub Administration Portal</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 0;">Live database monitoring, doctor credential audits, and content administration.</p>
+        </div>
+        <button onclick="refreshCurrentAdminView()" class="btn btn-secondary btn-sm">
+          <i class="fas fa-sync-alt"></i> Refresh Data
+        </button>
+      </div>
+
+      <div id="alert-container"></div>
+
+      <!-- Live MySQL Statistics Cards -->
+      <div class="admin-stats-grid" id="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-users"></i></div>
+          <div class="stat-content">
+            <h3 id="stat-total-users">-</h3>
+            <p>Total Registered Users</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon blue"><i class="fas fa-user-md"></i></div>
+          <div class="stat-content">
+            <h3 id="stat-verified-docs">-</h3>
+            <p>Verified Doctors</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon amber"><i class="fas fa-hourglass-half"></i></div>
+          <div class="stat-content">
+            <h3 id="stat-pending-certs">-</h3>
+            <p>Pending Certificate Audits</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon green"><i class="fas fa-calendar-check"></i></div>
+          <div class="stat-content">
+            <h3 id="stat-total-appts">-</h3>
+            <p>Total Consultations</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="tabs-nav" style="margin-bottom: 1.5rem;">
+        <button class="tab-btn active" id="tab-btn-certs" onclick="switchAdminTab('certs')">
+          <i class="fas fa-certificate"></i> Doctor Audits (<span id="badge-pending-count">0</span>)
+        </button>
+        <button class="tab-btn" id="tab-btn-doctors" onclick="switchAdminTab('doctors')">
+          <i class="fas fa-stethoscope"></i> All Doctors
+        </button>
+        <button class="tab-btn" id="tab-btn-appts" onclick="switchAdminTab('appts')">
+          <i class="fas fa-calendar-alt"></i> Appointments
+        </button>
+        <button class="tab-btn" id="tab-btn-users" onclick="switchAdminTab('users')">
+          <i class="fas fa-user-friends"></i> Users & Roles
+        </button>
+        <button class="tab-btn" id="tab-btn-contacts" onclick="switchAdminTab('contacts')">
+          <i class="fas fa-envelope"></i> Inquiries (<span id="badge-inquiries-count">0</span>)
+        </button>
+        <button class="tab-btn" id="tab-btn-feedback" onclick="switchAdminTab('feedback')">
+          <i class="fas fa-star"></i> Feedback Reviews
+        </button>
+        <button class="tab-btn" id="tab-btn-yoga" onclick="switchAdminTab('yoga')">
+          <i class="fab fa-youtube"></i> Yoga Links
+        </button>
+        <button class="tab-btn" id="tab-btn-audit" onclick="switchAdminTab('audit')">
+          <i class="fas fa-history"></i> Audit Logs
+        </button>
+      </div>
+
+      <!-- Tab 1: Pending Doctor Certificate Audits -->
+      <div id="view-certs">
+        <div class="card">
+          <div class="card-header">
+            <h3>Pending Doctor Certificate Audits</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">
+              Review uploaded credentials before granting booking eligibility. Documents are served via private authorized route.
+            </p>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Cert ID</th>
+                  <th>Doctor Name</th>
+                  <th>Specialty & City</th>
+                  <th>Document Type</th>
+                  <th>File Size</th>
+                  <th>Uploaded Date</th>
+                  <th>Inspect Document</th>
+                  <th>Review Decision</th>
+                </tr>
+              </thead>
+              <tbody id="pending-certs-tbody">
+                <tr><td colspan="8" style="text-align: center; padding: 2rem;"><div class="loading-spinner"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: All Doctors Directory -->
+      <div id="view-doctors" style="display: none;">
+        <div class="card">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <h3>All Registered Medical Practitioners</h3>
+            <div style="display: flex; gap: 0.5rem;">
+              <select id="doctor-status-filter" class="form-select" style="width: auto;" onchange="loadAdminDoctors()">
+                <option value="">All Verification Statuses</option>
+                <option value="verified">Verified</option>
+                <option value="pending">Pending</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Doc ID</th>
+                  <th>Doctor Name</th>
+                  <th>Email</th>
+                  <th>Specialization</th>
+                  <th>City</th>
+                  <th>Fee (INR)</th>
+                  <th>Status</th>
+                  <th>Profile</th>
+                </tr>
+              </thead>
+              <tbody id="admin-doctors-tbody">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Appointments -->
+      <div id="view-appts" style="display: none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>All Platform Appointments</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Appt ID</th>
+                  <th>Patient</th>
+                  <th>Doctor</th>
+                  <th>Specialization</th>
+                  <th>Date & Time</th>
+                  <th>Fee</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="admin-appts-tbody">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Users & Roles -->
+      <div id="view-users" style="display: none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>Registered User Accounts</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>User ID</th>
+                  <th>Full Name</th>
+                  <th>Email Address</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Account Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-tbody">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 5: Contact Inquiries -->
+      <div id="view-contacts" style="display: none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>Contact Messages & Inquiries</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Sender</th>
+                  <th>Email</th>
+                  <th>Subject</th>
+                  <th>Message</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-contacts-tbody">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 6: Feedback Reviews -->
+      <div id="view-feedback" style="display: none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>Feedback & Community Ratings</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Author</th>
+                  <th>Rating</th>
+                  <th>Message</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-feedback-tbody">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 7: Yoga Links Management (Editable Video URLs) -->
+      <div id="view-yoga" style="display: none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>Yoga Video Links & Content Management</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">
+              Edit YouTube video URLs dynamically in the MySQL database without changing any HTML code.
+            </p>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Pose ID</th>
+                  <th>Title</th>
+                  <th>Difficulty</th>
+                  <th>Current YouTube URL</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-yoga-tbody">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 8: Audit Logs -->
+      <div id="view-audit" style="display: none;">
+        <div class="card">
+          <div class="card-header">
+            <h3>System Audit Trail</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">
+              Immutable audit log of sensitive administrator decisions and verifications.
+            </p>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Administrator</th>
+                  <th>Action</th>
+                  <th>Target Type & ID</th>
+                  <th>Details / Reason</th>
+                </tr>
+              </thead>
+              <tbody id="admin-audit-tbody">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    let currentAdminTab = 'certs';
+
+    function switchAdminTab(tab) {
+      currentAdminTab = tab;
+      const tabs = ['certs', 'doctors', 'appts', 'users', 'contacts', 'feedback', 'yoga', 'audit'];
+      tabs.forEach(t => {
+        document.getElementById(`tab-btn-${t}`).classList.remove('active');
+        document.getElementById(`view-${t}`).style.display = 'none';
+      });
+
+      document.getElementById(`tab-btn-${tab}`).classList.add('active');
+      document.getElementById(`view-${tab}`).style.display = 'block';
+
+      refreshCurrentAdminView();
+    }
+
+    function refreshCurrentAdminView() {
+      loadOverviewStats();
+      if (currentAdminTab === 'certs') loadPendingCertificates();
+      else if (currentAdminTab === 'doctors') loadAdminDoctors();
+      else if (currentAdminTab === 'appts') loadAdminAppointments();
+      else if (currentAdminTab === 'users') loadAdminUsers();
+      else if (currentAdminTab === 'contacts') loadAdminContacts();
+      else if (currentAdminTab === 'feedback') loadAdminFeedback();
+      else if (currentAdminTab === 'yoga') loadAdminYoga();
+      else if (currentAdminTab === 'audit') loadAdminAuditLogs();
+    }
+
+    async function initAdminDashboard() {
+      const user = await HealthHub.getCurrentUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      if (user.role !== 'admin') {
+        window.location.href = user.role === 'doctor' ? 'doctor-dashboard.html' : 'patient-dashboard.html';
+        return;
+      }
+
+      loadOverviewStats();
+      loadPendingCertificates();
+    }
+
+    async function loadOverviewStats() {
+      try {
+        const stats = await HealthHub.request('/api/admin/overview');
+
+        document.getElementById('stat-total-users').textContent = stats.users.total;
+        document.getElementById('stat-verified-docs').textContent = stats.doctors.verified;
+        document.getElementById('stat-pending-certs').textContent = stats.pending_certificates;
+        document.getElementById('stat-total-appts').textContent = stats.appointments.total;
+
+        document.getElementById('badge-pending-count').textContent = stats.pending_certificates;
+        document.getElementById('badge-inquiries-count').textContent = stats.unread_contacts;
+      } catch (err) {
+        console.warn('Stats fetch error:', err);
+      }
+    }
+
+    // 1. Pending Certificates
+    async function loadPendingCertificates() {
+      const tbody = document.getElementById('pending-certs-tbody');
+      try {
+        const res = await HealthHub.request('/api/admin/certificates/pending');
+        const certs = res.pending_certificates || [];
+
+        if (certs.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                <i class="fas fa-check-double" style="font-size: 1.5rem; color: var(--success); margin-bottom: 0.5rem; display: block;"></i>
+                No pending doctor certificate audits. All applications have been reviewed.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = certs.map(c => `
+          <tr>
+            <td><strong>#${c.certificate_id}</strong></td>
+            <td>
+              <strong>${escapeHtml(c.doctor_name)}</strong>
+              <div style="font-size: 0.8rem; color: var(--text-secondary);">${escapeHtml(c.doctor_email)}</div>
+            </td>
+            <td>
+              <span class="badge badge-specialty">${escapeHtml(c.specialization)}</span>
+              <div style="font-size: 0.8rem; color: var(--text-secondary);">${escapeHtml(c.city)} &bull; ${c.experience_years} Yrs</div>
+            </td>
+            <td>${escapeHtml(c.certificate_type)}</td>
+            <td>${(c.file_size / 1024).toFixed(1)} KB</td>
+            <td>${c.uploaded_at ? c.uploaded_at.split(' ')[0] : 'Today'}</td>
+            <td>
+              <a href="/api/certificates/${c.certificate_id}/download" target="_blank" class="btn btn-outline btn-sm">
+                <i class="fas fa-file-pdf"></i> Inspect
+              </a>
+            </td>
+            <td>
+              <div style="display: flex; gap: 0.35rem;">
+                <button onclick="reviewCert(${c.certificate_id}, 'approve')" class="btn btn-success btn-sm">
+                  <i class="fas fa-check"></i> Approve
+                </button>
+                <button onclick="reviewCert(${c.certificate_id}, 'reject')" class="btn btn-danger btn-sm">
+                  <i class="fas fa-times"></i> Reject
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--danger);">Failed to load pending certificates.</td></tr>';
+      }
+    }
+
+    async function reviewCert(certId, action) {
+      let rejectionReason = '';
+      if (action === 'reject') {
+        rejectionReason = prompt('Please enter the mandatory rejection reason to display on the doctor dashboard:');
+        if (!rejectionReason || !rejectionReason.trim()) {
+          alert('Rejection reason cannot be blank.');
+          return;
+        }
+      } else {
+        if (!confirm(`Are you sure you want to approve certificate #${certId} and mark this doctor as verified?`)) return;
+      }
+
+      HealthHub.clearAlert();
+      try {
+        const res = await HealthHub.request(`/api/admin/certificates/${certId}/review`, {
+          method: 'POST',
+          body: JSON.stringify({ action, rejection_reason: rejectionReason })
+        });
+        HealthHub.renderAlert('success', res.message);
+        loadPendingCertificates();
+        loadOverviewStats();
+      } catch (err) {
+        HealthHub.renderAlert('danger', err.message || 'Review action failed.');
+      }
+    }
+
+    // 2. All Doctors
+    async function loadAdminDoctors() {
+      const tbody = document.getElementById('admin-doctors-tbody');
+      const status = document.getElementById('doctor-status-filter').value;
+      try {
+        const res = await HealthHub.request(`/api/admin/doctors?status=${status}`);
+        const doctors = res.doctors || [];
+
+        tbody.innerHTML = doctors.map(d => {
+          let badgeClass = 'badge-pending';
+          if (d.verification_status === 'verified') badgeClass = 'badge-verified';
+          else if (d.verification_status === 'rejected') badgeClass = 'badge-rejected';
+
+          return `
+            <tr>
+              <td>#${d.doctor_id}</td>
+              <td><strong>${escapeHtml(d.name)}</strong></td>
+              <td>${escapeHtml(d.email)}</td>
+              <td>${escapeHtml(d.specialization)}</td>
+              <td>${escapeHtml(d.city)}</td>
+              <td>₹${d.consultation_fee.toFixed(2)}</td>
+              <td><span class="badge ${badgeClass}">${d.verification_status}</span></td>
+              <td>
+                <a href="doctor-profile.html?id=${d.doctor_id}" target="_blank" class="btn btn-secondary btn-sm">
+                  View
+                </a>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="8">Failed loading doctors.</td></tr>';
+      }
+    }
+
+    // 3. Appointments
+    async function loadAdminAppointments() {
+      const tbody = document.getElementById('admin-appts-tbody');
+      try {
+        const res = await HealthHub.request('/api/admin/appointments');
+        const appts = res.appointments || [];
+
+        tbody.innerHTML = appts.map(a => `
+          <tr>
+            <td>#${a.id}</td>
+            <td><strong>${escapeHtml(a.patient_name)}</strong><br><span style="font-size: 0.8rem; color: var(--text-secondary);">${escapeHtml(a.patient_email)}</span></td>
+            <td><strong>${escapeHtml(a.doctor_name)}</strong></td>
+            <td>${escapeHtml(a.specialization)}</td>
+            <td>${a.appointment_date} ${a.appointment_time}</td>
+            <td>₹${a.consultation_fee.toFixed(2)}</td>
+            <td><span class="badge badge-specialty">${a.status}</span></td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="7">Failed loading appointments.</td></tr>';
+      }
+    }
+
+    // 4. Users
+    async function loadAdminUsers() {
+      const tbody = document.getElementById('admin-users-tbody');
+      try {
+        const res = await HealthHub.request('/api/admin/users');
+        const users = res.users || [];
+
+        tbody.innerHTML = users.map(u => `
+          <tr>
+            <td>#${u.id}</td>
+            <td><strong>${escapeHtml(u.name)}</strong></td>
+            <td>${escapeHtml(u.email)}</td>
+            <td><span class="badge badge-specialty">${u.role}</span></td>
+            <td><span class="badge ${u.status === 'active' ? 'badge-verified' : 'badge-rejected'}">${u.status}</span></td>
+            <td>
+              ${u.role !== 'admin' ? `
+                <button onclick="toggleUserStatus(${u.id}, '${u.status === 'active' ? 'suspended' : 'active'}')" class="btn ${u.status === 'active' ? 'btn-danger' : 'btn-success'} btn-sm">
+                  ${u.status === 'active' ? 'Suspend' : 'Activate'}
+                </button>
+              ` : '<span style="color: var(--text-secondary); font-size: 0.85rem;">Protected Admin</span>'}
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="6">Failed loading users.</td></tr>';
+      }
+    }
+
+    async function toggleUserStatus(userId, newStatus) {
+      if (!confirm(`Update user account status to ${newStatus}?`)) return;
+      try {
+        await HealthHub.request(`/api/admin/users/${userId}/status`, {
+          method: 'POST',
+          body: JSON.stringify({ status: newStatus })
+        });
+        loadAdminUsers();
+        loadOverviewStats();
+      } catch (err) {
+        alert(err.message || 'Status update failed.');
+      }
+    }
+
+    // 5. Contacts
+    async function loadAdminContacts() {
+      const tbody = document.getElementById('admin-contacts-tbody');
+      try {
+        const res = await HealthHub.request('/api/admin/contacts');
+        const msgs = res.messages || [];
+
+        tbody.innerHTML = msgs.map(m => `
+          <tr>
+            <td>#${m.id}</td>
+            <td><strong>${escapeHtml(m.name)}</strong></td>
+            <td>${escapeHtml(m.email)}</td>
+            <td><strong>${escapeHtml(m.subject)}</strong></td>
+            <td style="max-width: 300px; font-size: 0.875rem;">${escapeHtml(m.message)}</td>
+            <td><span class="badge ${m.status === 'unread' ? 'badge-rejected' : 'badge-verified'}">${m.status}</span></td>
+            <td>
+              ${m.status === 'unread' ? `
+                <button onclick="markContactRead(${m.id})" class="btn btn-outline btn-sm">Mark Read</button>
+              ` : '<span>-</span>'}
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="7">Failed loading contact messages.</td></tr>';
+      }
+    }
+
+    async function markContactRead(msgId) {
+      try {
+        await HealthHub.request(`/api/admin/contacts/${msgId}/status`, {
+          method: 'POST',
+          body: JSON.stringify({ status: 'read' })
+        });
+        loadAdminContacts();
+        loadOverviewStats();
+      } catch (e) {
+        alert('Action failed');
+      }
+    }
+
+    // 6. Feedback
+    async function loadAdminFeedback() {
+      const tbody = document.getElementById('admin-feedback-tbody');
+      try {
+        const res = await HealthHub.request('/api/admin/feedback');
+        const items = res.feedback || [];
+
+        tbody.innerHTML = items.map(f => `
+          <tr>
+            <td>#${f.id}</td>
+            <td><strong>${escapeHtml(f.name)}</strong></td>
+            <td>${f.rating} / 5 Stars</td>
+            <td style="max-width: 300px;">${escapeHtml(f.message)}</td>
+            <td><span class="badge ${f.status === 'published' ? 'badge-verified' : 'badge-rejected'}">${f.status}</span></td>
+            <td>
+              <button onclick="toggleFeedback(${f.id}, '${f.status === 'published' ? 'hidden' : 'published'}')" class="btn btn-outline btn-sm">
+                ${f.status === 'published' ? 'Hide' : 'Publish'}
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="6">Failed loading feedback.</td></tr>';
+      }
+    }
+
+    async function toggleFeedback(fbId, status) {
+      try {
+        await HealthHub.request(`/api/admin/feedback/${fbId}/status`, {
+          method: 'POST',
+          body: JSON.stringify({ status })
+        });
+        loadAdminFeedback();
+      } catch (e) {
+        alert('Action failed');
+      }
+    }
+
+    // 7. Yoga Links Management
+    async function loadAdminYoga() {
+      const tbody = document.getElementById('admin-yoga-tbody');
+      try {
+        const res = await HealthHub.request('/api/admin/yoga');
+        const poses = res.yoga_poses || [];
+
+        tbody.innerHTML = poses.map(p => `
+          <tr>
+            <td>#${p.id}</td>
+            <td><strong>${escapeHtml(p.title)}</strong></td>
+            <td>${p.difficulty}</td>
+            <td>
+              <input type="url" id="yoga-url-${p.id}" class="form-control" value="${escapeHtml(p.video_url)}" style="font-size: 0.85rem;">
+            </td>
+            <td>
+              <button onclick="saveYogaLink(${p.id})" class="btn btn-primary btn-sm">
+                <i class="fas fa-save"></i> Save URL
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="5">Failed loading yoga records.</td></tr>';
+      }
+    }
+
+    async function saveYogaLink(poseId) {
+      const url = document.getElementById(`yoga-url-${poseId}`).value.trim();
+      if (!url) {
+        alert('URL cannot be blank.');
+        return;
+      }
+      try {
+        const res = await HealthHub.request(`/api/admin/yoga/${poseId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ video_url: url })
+        });
+        HealthHub.renderAlert('success', res.message);
+      } catch (err) {
+        HealthHub.renderAlert('danger', err.message || 'Failed updating video link.');
+      }
+    }
+
+    // 8. Audit Logs
+    async function loadAdminAuditLogs() {
+      const tbody = document.getElementById('admin-audit-tbody');
+      try {
+        const res = await HealthHub.request('/api/admin/audit-logs');
+        const logs = res.audit_logs || [];
+
+        tbody.innerHTML = logs.map(l => `
+          <tr>
+            <td style="font-size: 0.85rem; color: var(--text-secondary);">${l.created_at}</td>
+            <td><strong>${escapeHtml(l.admin_name || 'System Admin')}</strong></td>
+            <td><span class="badge badge-specialty">${l.action}</span></td>
+            <td>${l.target_type} #${l.target_id || '-'}</td>
+            <td style="font-size: 0.875rem;">${escapeHtml(l.details || '-')}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="5">Failed loading audit logs.</td></tr>';
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar();
+      HealthHub.renderFooter();
+      initAdminDashboard();
+    });
+  </script>
+</body>
+</html>

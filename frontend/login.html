@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container" style="max-width: 500px;">
+      <div class="card" style="box-shadow: var(--shadow-lg);">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <div class="icon-box" style="margin: 0 auto 1rem auto;">
+            <i class="fas fa-lock"></i>
+          </div>
+          <h2>Welcome Back</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">Sign in to your HealthHub account</p>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="email" class="form-label">Email Address</label>
+            <input type="email" id="email" class="form-control" placeholder="name@example.com" required autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" id="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" id="submit-btn" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+            <i class="fas fa-sign-in-alt"></i> Sign In
+          </button>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
+          Don't have an account? <a href="register.html">Create one here</a><br>
+          <button type="button" id="resend-verification" class="btn btn-outline btn-sm" style="margin-top:.75rem">Resend verification email</button>
+        </div>
+
+
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar();
+      HealthHub.renderFooter();
+
+      const form = document.getElementById('login-form');
+      const submitBtn = document.getElementById('submit-btn');
+
+      document.getElementById('resend-verification').addEventListener('click', async () => {
+        const email = document.getElementById('email').value.trim();
+        if (!email) { HealthHub.renderAlert('warning', 'Enter your email address first.'); return; }
+        try {
+          const res = await HealthHub.request('/api/auth/resend-verification', {method:'POST', body:JSON.stringify({email})});
+          HealthHub.renderAlert('success', res.message || 'If verification is needed, a link will be sent.');
+        } catch (err) { HealthHub.renderAlert('danger', err.message || 'Unable to request a new verification email.'); }
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        HealthHub.clearAlert();
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading-spinner" style="width: 1.2rem; height: 1.2rem; border-width: 2px;"></span> Signing In...';
+
+        try {
+          const res = await HealthHub.request('/api/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password })
+          });
+
+          HealthHub.renderAlert('success', 'Login successful! Redirecting to dashboard...');
+          setTimeout(() => {
+            window.location.href = res.redirect || 'index.html';
+          }, 800);
+        } catch (err) {
+          HealthHub.renderAlert('danger', err.message || 'Login failed.');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+        }
+      });
+    });
+
+  </script>
+</body>
+</html>

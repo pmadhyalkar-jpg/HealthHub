@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Profile - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .profile-banner {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+    .profile-avatar-large {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: var(--light-green);
+      color: var(--primary-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      border: 3px solid var(--border-color);
+      flex-shrink: 0;
+    }
+    @media (max-width: 768px) {
+      .profile-banner {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container" style="max-width: 960px;">
+      <div style="margin-bottom: 1.5rem;">
+        <a href="doctors.html" class="btn btn-secondary btn-sm">
+          <i class="fas fa-arrow-left"></i> Back to Doctor Directory
+        </a>
+      </div>
+
+      <div id="profile-container">
+        <div style="text-align: center; padding: 4rem;">
+          <div class="loading-spinner"></div>
+          <p style="margin-top: 1rem; color: var(--text-secondary);">Loading doctor profile from MySQL database...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    async function loadDoctorProfile() {
+      const container = document.getElementById('profile-container');
+      const docId = HealthHub.getUrlParam('id');
+
+      if (!docId || isNaN(parseInt(docId, 10))) {
+        container.innerHTML = `
+          <div class="state-container">
+            <i class="fas fa-exclamation-circle" style="color: var(--danger)"></i>
+            <h4>Invalid Doctor Request</h4>
+            <p>No valid doctor ID was provided in the query URL. Please return to the directory and select a doctor.</p>
+            <a href="doctors.html" class="btn btn-primary" style="margin-top: 1rem;">View All Doctors</a>
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const res = await HealthHub.request(`/api/doctors/${docId}`);
+        const doc = res.doctor;
+
+        if (!doc) throw new Error('Doctor profile record missing.');
+
+        const isVerified = doc.verification_status === 'verified';
+        const badgeClass = isVerified ? 'badge-verified' : (doc.verification_status === 'pending' ? 'badge-pending' : 'badge-rejected');
+        const badgeIcon = isVerified ? 'fa-check-circle' : (doc.verification_status === 'pending' ? 'fa-clock' : 'fa-times-circle');
+
+        let availRows = '';
+        if (doc.availability && doc.availability.length > 0) {
+          availRows = doc.availability.map(a => `
+            <tr>
+              <td><strong>${escapeHtml(a.day_of_week)}</strong></td>
+              <td>${a.start_time} - ${a.end_time}</td>
+              <td>${a.slot_duration_minutes} Minutes</td>
+              <td><span class="badge badge-verified">Active Schedule</span></td>
+            </tr>
+          `).join('');
+        } else {
+          availRows = `
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 1.5rem;">
+                No recurring weekly consultation slots currently registered. Contact clinic directly.
+              </td>
+            </tr>
+          `;
+        }
+
+        container.innerHTML = `
+          <div class="profile-banner">
+            <div class="profile-avatar-large">
+              <i class="fas fa-user-md"></i>
+            </div>
+            <div style="flex: 1;">
+              <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                <h1 style="font-size: 1.75rem; margin-bottom: 0;">${escapeHtml(doc.name)}</h1>
+                <span class="badge ${badgeClass}">
+                  <i class="fas ${badgeIcon}"></i> ${doc.verification_status}
+                </span>
+              </div>
+
+              <div style="color: var(--primary-green); font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">
+                ${escapeHtml(doc.specialization)} &bull; ${escapeHtml(doc.qualification)}
+              </div>
+
+              <p style="color: var(--text-secondary); margin-bottom: 0.75rem;">
+                <i class="fas fa-map-marker-alt"></i> ${escapeHtml(doc.clinic_address || 'Clinic')}, ${escapeHtml(doc.city)} &bull; 
+                <i class="fas fa-briefcase"></i> ${doc.experience_years} Years Experience
+              </p>
+
+              <div style="font-size: 1.25rem; font-weight: 700; color: var(--primary-green);">
+                ₹${doc.consultation_fee.toFixed(2)} <span style="font-size: 0.9rem; font-weight: 400; color: var(--text-secondary);">per standard consultation</span>
+              </div>
+            </div>
+
+            <div>
+              ${isVerified ? `
+                <a href="appointments.html?doctor_id=${doc.id}" class="btn btn-primary btn-lg">
+                  <i class="fas fa-calendar-check"></i> Book Appointment
+                </a>
+              ` : `
+                <button class="btn btn-secondary btn-lg" disabled title="Credential Verification Pending">
+                  <i class="fas fa-lock"></i> Not Available for Booking
+                </button>
+              `}
+            </div>
+          </div>
+
+          <!-- Bio & Background -->
+          <div class="card" style="margin-bottom: 2rem;">
+            <div class="card-header">
+              <h3><i class="fas fa-user-circle"></i> About ${escapeHtml(doc.name)}</h3>
+            </div>
+            <div class="card-body">
+              <p style="white-space: pre-line; color: var(--text-main); font-size: 1rem;">
+                ${escapeHtml(doc.bio || 'Professional medical background committed to patient wellness and ethical clinical consultations.')}
+              </p>
+            </div>
+          </div>
+
+          <!-- Weekly Availability Schedule -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-calendar-alt"></i> Consultation Schedule & Timetable</h3>
+              <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
+                Regular weekly consultation slots in MySQL database. Subject to real-time slot availability.
+              </p>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Consultation Hours</th>
+                    <th>Slot Duration</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${availRows}
+                </tbody>
+              </table>
+            </div>
+
+            ${isVerified ? `
+              <div style="margin-top: 1.5rem; text-align: right;">
+                <a href="appointments.html?doctor_id=${doc.id}" class="btn btn-primary">
+                  <i class="fas fa-calendar-plus"></i> Select a Date & Book Slot
+                </a>
+              </div>
+            ` : ''}
+          </div>
+        `;
+
+      } catch (err) {
+        container.innerHTML = `
+          <div class="state-container">
+            <i class="fas fa-user-times" style="color: var(--danger)"></i>
+            <h4>Doctor Profile Not Found</h4>
+            <p>${escapeHtml(err.message || 'The requested doctor record could not be found in the database.')}</p>
+            <a href="doctors.html" class="btn btn-primary" style="margin-top: 1rem;">Browse Doctor Directory</a>
+          </div>
+        `;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar('doctors');
+      HealthHub.renderFooter();
+      loadDoctorProfile();
+    });
+  </script>
+</body>
+</html>

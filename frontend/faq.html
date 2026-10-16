@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frequently Asked Questions - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .faq-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      transition: var(--transition);
+    }
+    .faq-card:hover {
+      border-color: var(--primary-green);
+    }
+  </style>
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container" style="max-width: 860px;">
+      <div class="section-title">
+        <h2>Frequently Asked Questions</h2>
+        <p>Find answers to common questions about patient appointments, doctor certificate verification, data privacy, and using HealthHub.</p>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="tabs-nav" style="justify-content: center; margin-bottom: 2rem;">
+        <button class="tab-btn active" onclick="filterFaqs('all', this)">All Questions</button>
+        <button class="tab-btn" onclick="filterFaqs('General & Medical Disclaimer', this)">Disclaimer</button>
+        <button class="tab-btn" onclick="filterFaqs('Appointments', this)">Appointments</button>
+        <button class="tab-btn" onclick="filterFaqs('Doctor Verification', this)">Verification</button>
+        <button class="tab-btn" onclick="filterFaqs('Account & Privacy', this)">Privacy</button>
+      </div>
+
+      <div id="faqs-container">
+        <div style="text-align: center; padding: 3rem;">
+          <div class="loading-spinner"></div>
+          <p style="margin-top: 1rem; color: var(--text-secondary);">Loading FAQs from database...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    let allFaqs = [];
+
+    async function loadFaqs() {
+      const container = document.getElementById('faqs-container');
+      try {
+        const res = await HealthHub.request('/api/content/faqs');
+        allFaqs = res.faqs || [];
+        renderFaqs(allFaqs);
+      } catch (e) {
+        container.innerHTML = '<div class="alert alert-danger">Failed to load FAQs.</div>';
+      }
+    }
+
+    function renderFaqs(faqs) {
+      const container = document.getElementById('faqs-container');
+      if (faqs.length === 0) {
+        container.innerHTML = '<div class="state-container"><p>No FAQs found for this category.</p></div>';
+        return;
+      }
+
+      container.innerHTML = faqs.map(f => `
+        <div class="faq-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <h3 style="font-size: 1.15rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fas fa-question-circle" style="color: var(--primary-green);"></i>
+              ${escapeHtml(f.question)}
+            </h3>
+            <span class="badge badge-specialty">${escapeHtml(f.category)}</span>
+          </div>
+          <p style="color: var(--text-secondary); margin-bottom: 0; line-height: 1.7; padding-left: 1.6rem; font-size: 0.95rem;">
+            ${escapeHtml(f.answer)}
+          </p>
+        </div>
+      `).join('');
+    }
+
+    function filterFaqs(category, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      if (category === 'all') {
+        renderFaqs(allFaqs);
+      } else {
+        const filtered = allFaqs.filter(f => f.category === category || f.category.includes(category));
+        renderFaqs(filtered);
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar();
+      HealthHub.renderFooter();
+      loadFaqs();
+    });
+  </script>
+</body>
+</html>

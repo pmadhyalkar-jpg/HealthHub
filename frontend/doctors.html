@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find Doctors - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .doctor-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .doctor-header {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .doctor-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--light-green);
+      color: var(--primary-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      border: 2px solid var(--border-color);
+      flex-shrink: 0;
+    }
+    .doctor-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+    }
+    .doctor-meta-item i {
+      width: 16px;
+      color: var(--primary-green);
+    }
+    .filter-bar {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+  </style>
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Find & Consult Doctors</h2>
+        <p>Browse qualified medical practitioners across disciplines. Check real schedules and book appointments with verified doctors.</p>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="filter-bar">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="search-input" class="form-label"><i class="fas fa-search"></i> Search</label>
+            <input type="text" id="search-input" class="form-control" placeholder="Doctor name, hospital...">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="specialty-filter" class="form-label"><i class="fas fa-stethoscope"></i> Specialization</label>
+            <select id="specialty-filter" class="form-select">
+              <option value="">All Specializations</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="city-filter" class="form-label"><i class="fas fa-map-marker-alt"></i> City</label>
+            <select id="city-filter" class="form-select">
+              <option value="">All Cities</option>
+            </select>
+          </div>
+
+
+          <div style="display: flex; gap: 0.5rem;">
+            <button id="apply-btn" class="btn btn-primary" style="flex: 1;">
+              Filter
+            </button>
+            <button id="reset-btn" class="btn btn-secondary" title="Reset Filters">
+              <i class="fas fa-undo"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Stats -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div id="results-count" style="font-weight: 600; color: var(--text-secondary);">
+          Loading practitioners from database...
+        </div>
+      </div>
+
+      <!-- Doctor Cards Grid -->
+      <div id="doctors-grid" class="grid-3">
+        <!-- Rendered via JavaScript from MySQL -->
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    let filterSpecialties = [];
+    let filterCities = [];
+
+    async function loadFilters() {
+      try {
+        const data = await HealthHub.request('/api/doctors/filters');
+        const specSelect = document.getElementById('specialty-filter');
+        const citySelect = document.getElementById('city-filter');
+
+        data.specializations.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s;
+          opt.textContent = s;
+          specSelect.appendChild(opt);
+        });
+
+        data.cities.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          opt.textContent = c;
+          citySelect.appendChild(opt);
+        });
+      } catch (err) {
+        console.warn('Failed loading filters:', err);
+      }
+    }
+
+    async function fetchDoctors() {
+      const grid = document.getElementById('doctors-grid');
+      const countEl = document.getElementById('results-count');
+
+      grid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+          <div class="loading-spinner"></div>
+          <p style="margin-top: 1rem; color: var(--text-secondary);">Querying live database records...</p>
+        </div>
+      `;
+
+      const q = document.getElementById('search-input').value.trim();
+      const spec = document.getElementById('specialty-filter').value;
+      const city = document.getElementById('city-filter').value;
+      const verifiedOnly = 'true';
+
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (spec) params.set('specialization', spec);
+      if (city) params.set('city', city);
+      params.set('verified_only', verifiedOnly);
+
+      try {
+        const res = await HealthHub.request(`/api/doctors?${params.toString()}`);
+        const doctors = res.doctors || [];
+
+        countEl.textContent = `Showing ${doctors.length} doctor profile${doctors.length === 1 ? '' : 's'} from database`;
+
+        if (doctors.length === 0) {
+          grid.innerHTML = `
+            <div class="state-container" style="grid-column: 1/-1;">
+              <i class="fas fa-user-md"></i>
+              <h4>No Doctors Found</h4>
+              <p>No matching doctors found for the chosen filters. Try clearing your search parameters.</p>
+              <button onclick="resetFilters()" class="btn btn-primary" style="margin-top: 1rem;">Reset Filters</button>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = doctors.map(doc => {
+          const isVerified = true;
+          const badgeClass = isVerified ? 'badge-verified' : (doc.verification_status === 'pending' ? 'badge-pending' : 'badge-rejected');
+          const badgeIcon = isVerified ? 'fa-check-circle' : (doc.verification_status === 'pending' ? 'fa-clock' : 'fa-times-circle');
+
+          return `
+            <div class="card doctor-card">
+              <div class="doctor-header">
+                <div class="doctor-avatar">
+                  <i class="fas fa-user-md"></i>
+                </div>
+                <div>
+                  <h3 style="font-size: 1.15rem; margin-bottom: 0.2rem;">${escapeHtml(doc.name)}</h3>
+                  <span class="badge badge-specialty">${escapeHtml(doc.specialization)}</span>
+                </div>
+              </div>
+
+              <div class="card-body">
+                <div class="doctor-meta-item">
+                  <i class="fas fa-graduation-cap"></i>
+                  <span>${escapeHtml(doc.qualification)}</span>
+                </div>
+                <div class="doctor-meta-item">
+                  <i class="fas fa-briefcase"></i>
+                  <span>${doc.experience_years} years experience</span>
+                </div>
+                <div class="doctor-meta-item">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span>${escapeHtml(doc.city)} &bull; ${escapeHtml(doc.clinic_address || 'Clinic on record')}</span>
+                </div>
+                <div class="doctor-meta-item">
+                  <i class="fas fa-calendar-alt"></i>
+                  <span>${escapeHtml(doc.available_days)}</span>
+                </div>
+                <div class="doctor-meta-item" style="font-weight: 700; color: var(--primary-green); margin-top: 0.5rem;">
+                  <i class="fas fa-rupee-sign"></i>
+                  <span>₹${doc.consultation_fee.toFixed(2)} Consultation Fee</span>
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <span class="badge ${badgeClass}">
+                  <i class="fas ${badgeIcon}"></i> ${doc.verification_status}
+                </span>
+
+                <div style="display: flex; gap: 0.5rem;">
+                  <a href="doctor-profile.html?id=${doc.id}" class="btn btn-outline btn-sm">
+                    View Profile
+                  </a>
+                  ${isVerified ? `
+                    <a href="appointments.html?doctor_id=${doc.id}" class="btn btn-primary btn-sm">
+                      Book Slot
+                    </a>
+                  ` : `
+                    <button class="btn btn-secondary btn-sm" disabled title="Pending Verification">
+                      Unbookable
+                    </button>
+                  `}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        countEl.textContent = 'Error loading doctors.';
+        grid.innerHTML = `
+          <div class="alert alert-danger" style="grid-column: 1/-1;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>Error fetching doctor records from MySQL database. Please ensure backend is active.</div>
+          </div>
+        `;
+      }
+    }
+
+    function resetFilters() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('specialty-filter').value = '';
+      document.getElementById('city-filter').value = '';
+      fetchDoctors();
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar('doctors');
+      HealthHub.renderFooter();
+
+      loadFilters();
+      fetchDoctors();
+
+      document.getElementById('apply-btn').addEventListener('click', fetchDoctors);
+      document.getElementById('reset-btn').addEventListener('click', resetFilters);
+      document.getElementById('search-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') fetchDoctors();
+      });
+    });
+  </script>
+</body>
+</html>

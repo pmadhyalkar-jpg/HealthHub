@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health & Wellness Articles - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Evidence-Based Wellness Articles</h2>
+        <p>Curated insights into preventive healthcare, sleep hygiene, cardiovascular wellness, and sustainable everyday nutrition.</p>
+      </div>
+
+      <div id="articles-container">
+        <div style="text-align: center; padding: 3rem;">
+          <div class="loading-spinner"></div>
+          <p style="margin-top: 1rem; color: var(--text-secondary);">Loading published articles from MySQL...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Full Article Reading Modal -->
+  <div id="article-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; padding: 1.25rem;">
+    <div class="card" style="max-width: 760px; max-height: 90vh; overflow-y: auto; width: 100%; position: relative;">
+      <button onclick="closeArticleModal()" class="btn btn-secondary btn-sm" style="position: absolute; top: 1rem; right: 1rem;">
+        <i class="fas fa-times"></i> Close
+      </button>
+
+      <div id="modal-content">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    async function loadArticles() {
+      const container = document.getElementById('articles-container');
+      try {
+        const res = await HealthHub.request('/api/content/articles');
+        const articles = res.articles || [];
+
+        if (articles.length === 0) {
+          container.innerHTML = '<div class="state-container"><p>No articles currently published.</p></div>';
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="grid-2">
+            ${articles.map(a => `
+              <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                  <span class="badge badge-specialty">${escapeHtml(a.category)}</span>
+                  <span style="font-size: 0.8rem; color: var(--text-secondary);"><i class="fas fa-clock"></i> ${escapeHtml(a.read_time)}</span>
+                </div>
+
+                <h3 style="font-size: 1.25rem; margin-bottom: 0.75rem;">${escapeHtml(a.title)}</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.25rem;">
+                  ${escapeHtml(a.summary)}
+                </p>
+
+                <div class="card-footer">
+                  <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                    <div><strong>${escapeHtml(a.author_name)}</strong></div>
+                    <div>Published ${a.published_at}</div>
+                  </div>
+                  <button onclick="readArticle('${a.slug}')" class="btn btn-outline btn-sm">
+                    Read Article <i class="fas fa-book-open"></i>
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = '<div class="alert alert-danger">Error loading articles from MySQL.</div>';
+      }
+    }
+
+    async function readArticle(slug) {
+      const modal = document.getElementById('article-modal');
+      const content = document.getElementById('modal-content');
+      modal.style.display = 'flex';
+      content.innerHTML = '<div style="text-align: center; padding: 3rem;"><div class="loading-spinner"></div></div>';
+
+      try {
+        const res = await HealthHub.request(`/api/content/articles/${slug}`);
+        const art = res.article;
+
+        content.innerHTML = `
+          <span class="badge badge-specialty" style="margin-bottom: 0.5rem;">${escapeHtml(art.category)}</span>
+          <h2 style="margin-bottom: 0.5rem; font-size: 1.75rem;">${escapeHtml(art.title)}</h2>
+          <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+            By <strong>${escapeHtml(art.author_name)}</strong> &bull; Published ${art.published_at} &bull; ${escapeHtml(art.read_time)}
+          </div>
+
+          <div style="font-size: 1.05rem; line-height: 1.8; color: var(--text-main); white-space: pre-line; margin-bottom: 2rem;">
+            ${escapeHtml(art.content)}
+          </div>
+
+          <div class="alert alert-info" style="font-size: 0.85rem;">
+            <i class="fas fa-info-circle"></i>
+            <div><strong>Editorial Disclaimer:</strong> This article is authored for educational and general wellness awareness. It is not an individual medical prescription. Consult a healthcare professional for clinical concerns.</div>
+          </div>
+        `;
+      } catch (e) {
+        content.innerHTML = '<div class="alert alert-danger">Failed to load article content.</div>';
+      }
+    }
+
+    function closeArticleModal() {
+      document.getElementById('article-modal').style.display = 'none';
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar('articles');
+      HealthHub.renderFooter();
+      loadArticles();
+    });
+  </script>
+</body>
+</html>

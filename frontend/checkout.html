@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout | HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .checkout-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:1.25rem;align-items:start}
+    .checkout-method{display:flex;gap:.85rem;align-items:center;border:1px solid var(--border-color);border-radius:14px;padding:1rem;background:#fff}
+    .checkout-method.active{border-color:var(--primary-green);background:var(--light-green)}
+    .checkout-action{display:grid;gap:.7rem}
+    .checkout-action button{width:100%}
+    .price{font-size:2.1rem;font-weight:800;color:var(--dark-green)}
+    .status-box{padding:1rem;border-radius:12px;background:var(--light-green);border:1px solid var(--border-color)}
+    @media(max-width:760px){.checkout-layout{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div><div id="navbar-placeholder"></div>
+  <main class="section"><div class="container" style="max-width:980px">
+    <div class="section-title"><h2>Appointment Checkout</h2><p>Review your appointment and complete the test checkout.</p></div>
+    <div class="alert alert-warning"><i class="fas fa-flask"></i><div><strong>Test Mode — No Real Money Involved.</strong> This checkout simulates payment outcomes for testing. It does not connect to UPI, cards, banks, or a real payment processor.</div></div>
+    <div id="alert-container"></div>
+    <div id="loading-card" class="card" style="padding:2rem;text-align:center"><div class="loading-spinner"></div><p>Loading checkout details…</p></div>
+    <div id="checkout-content" class="checkout-layout" style="display:none">
+      <section class="card" style="padding:1.4rem">
+        <h3 style="margin-bottom:1rem"><i class="fas fa-lock" style="color:var(--primary-green)"></i> Test payment method</h3>
+        <div class="checkout-method active"><i class="fas fa-vial fa-2x" style="color:var(--primary-green)"></i><div><strong>Simulated checkout</strong><p style="color:var(--text-secondary);font-size:.9rem;margin:.2rem 0 0">Choose an outcome below to test the booking flow.</p></div></div>
+        <div class="checkout-action" style="margin-top:1.25rem">
+          <button id="success-btn" class="btn btn-primary btn-lg"><i class="fas fa-check-circle"></i> Simulate Successful Payment</button>
+          <button id="failed-btn" class="btn btn-outline"><i class="fas fa-times-circle"></i> Simulate Failed Payment</button>
+          <button id="cancel-btn" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Cancel Checkout</button>
+        </div>
+        <p style="font-size:.82rem;color:var(--text-secondary);margin-top:1rem"><i class="fas fa-shield-alt"></i> Do not enter any real card number, UPI ID, password, or banking details here.</p>
+      </section>
+      <aside class="card" style="padding:1.4rem">
+        <h3 style="margin-bottom:1rem">Appointment summary</h3>
+        <p style="color:var(--text-secondary);font-size:.85rem">Consultation with</p><h3 id="doctor-name">—</h3><p id="doctor-specialty" style="color:var(--text-secondary)"></p>
+        <hr style="margin:1rem 0;border:0;border-top:1px solid var(--border-color)">
+        <div style="display:flex;justify-content:space-between;gap:1rem;margin-bottom:.65rem"><span>Date</span><strong id="appointment-date">—</strong></div>
+        <div style="display:flex;justify-content:space-between;gap:1rem;margin-bottom:.65rem"><span>Time</span><strong id="appointment-time">—</strong></div>
+        <div style="display:flex;justify-content:space-between;gap:1rem;margin-bottom:.65rem"><span>Reference</span><strong id="reference">—</strong></div>
+        <hr style="margin:1rem 0;border:0;border-top:1px solid var(--border-color)">
+        <p style="color:var(--text-secondary)">Total consultation fee</p><div class="price" id="amount">₹0.00</div>
+        <p style="font-size:.8rem;color:var(--text-secondary);margin-top:.5rem">Cancellation policy: failed or cancelled test checkouts release the pending slot. Successful test payments confirm the appointment.</p>
+      </aside>
+    </div>
+    <div id="result-card" class="card" style="display:none;padding:2rem;text-align:center;margin-top:1rem"></div>
+  </div></main>
+  <div id="footer-placeholder"></div>
+  <script src="assets/js/api.js"></script>
+  <script>
+    let paymentId = null;
+    async function loadCheckout(){
+      paymentId = new URLSearchParams(location.search).get('payment_id');
+      if(!paymentId){HealthHub.renderAlert('danger','Payment reference is missing. Please start booking again.');document.getElementById('loading-card').style.display='none';return;}
+      try{
+        const data=await HealthHub.request('/api/payments/'+encodeURIComponent(paymentId));const p=data.payment;
+        if(p.payment_status!=='pending'){
+          showResult(p.payment_status==='succeeded','This test transaction has already been processed.',p.appointment_id);return;
+        }
+        document.getElementById('doctor-name').textContent=p.doctor_name;
+        document.getElementById('doctor-specialty').textContent=p.specialization+' · '+p.city;
+        document.getElementById('appointment-date').textContent=p.appointment_date;
+        document.getElementById('appointment-time').textContent=p.appointment_time;
+        document.getElementById('reference').textContent=p.transaction_reference;
+        document.getElementById('amount').textContent=new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(p.amount);
+        document.getElementById('loading-card').style.display='none';document.getElementById('checkout-content').style.display='grid';
+      }catch(e){document.getElementById('loading-card').style.display='none';HealthHub.renderAlert('danger',e.message||'Could not load checkout. Please sign in and try again.');}
+    }
+    async function process(action){
+      const buttons=['success-btn','failed-btn','cancel-btn'].map(id=>document.getElementById(id));buttons.forEach(b=>b.disabled=true);
+      try{const res=await HealthHub.request('/api/payments/'+encodeURIComponent(paymentId)+'/simulate',{method:'POST',body:JSON.stringify({action})});
+        showResult(action==='success',res.message,res.appointment_id);
+      }catch(e){HealthHub.renderAlert('danger',e.message||'Could not process test payment.');buttons.forEach(b=>b.disabled=false);}
+    }
+    function showResult(success,message,appointmentId){
+      document.getElementById('loading-card').style.display='none';document.getElementById('checkout-content').style.display='none';
+      const card=document.getElementById('result-card');card.style.display='block';
+      card.innerHTML=`<div class="icon-box" style="margin:0 auto 1rem;background:${success?'#dcfce7':'#fef2f2'};color:${success?'#16a34a':'#dc2626'}"><i class="fas ${success?'fa-check':'fa-times'}"></i></div><h2>${success?'Appointment confirmed':'Checkout not completed'}</h2><p style="margin:1rem 0">${escapeText(message)}</p>${success?`<p>Appointment reference: <strong>#${appointmentId||'—'}</strong></p>`:''}<div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:1.3rem"><a class="btn btn-primary" href="patient-dashboard.html">View appointments</a><a class="btn btn-outline" href="doctors.html">Find another doctor</a></div><p style="font-size:.8rem;color:var(--text-secondary);margin-top:1rem">Test Mode — no real money was moved.</p>`;
+    }
+    function escapeText(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    document.addEventListener('DOMContentLoaded',()=>{HealthHub.renderDisclaimerBanner();HealthHub.renderNavbar('appointments');HealthHub.renderFooter();document.getElementById('success-btn').addEventListener('click',()=>process('success'));document.getElementById('failed-btn').addEventListener('click',()=>process('failed'));document.getElementById('cancel-btn').addEventListener('click',()=>process('cancel'));loadCheckout();});
+  </script>
+</body></html>

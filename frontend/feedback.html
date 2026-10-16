@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Feedback - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .star-rating {
+      display: flex;
+      gap: 0.35rem;
+      font-size: 1.6rem;
+      color: #D1D5DB;
+      cursor: pointer;
+      margin-top: 0.35rem;
+    }
+    .star-rating .fas.active {
+      color: #F59E0B;
+    }
+    .review-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container" style="max-width: 860px;">
+      <div class="section-title">
+        <h2>Patient & User Feedback</h2>
+        <p>Share your experience using the HealthHub platform and view real reviews saved in our MySQL database.</p>
+      </div>
+
+      <div id="alert-container"></div>
+
+      <div class="card" style="box-shadow: var(--shadow-md); margin-bottom: 2.5rem;">
+        <h3 style="margin-bottom: 1.25rem;"><i class="fas fa-comment-dots" style="color: var(--primary-green);"></i> Leave a Review</h3>
+
+        <form id="feedback-form">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="fb-name" class="form-label">Your Name <span style="color: var(--danger)">*</span></label>
+              <input type="text" id="fb-name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+            </div>
+            <div class="form-group">
+              <label for="fb-email" class="form-label">Email (Optional)</label>
+              <input type="email" id="fb-email" class="form-control" placeholder="name@example.com">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Overall Experience Rating <span style="color: var(--danger)">*</span></label>
+            <div class="star-rating" id="star-picker">
+              <i class="fas fa-star active" data-rating="1"></i>
+              <i class="fas fa-star active" data-rating="2"></i>
+              <i class="fas fa-star active" data-rating="3"></i>
+              <i class="fas fa-star active" data-rating="4"></i>
+              <i class="fas fa-star active" data-rating="5"></i>
+            </div>
+            <input type="hidden" id="fb-rating" value="5" required>
+          </div>
+
+          <div class="form-group">
+            <label for="fb-message" class="form-label">Your Comments / Suggestions <span style="color: var(--danger)">*</span></label>
+            <textarea id="fb-message" class="form-control" rows="3" placeholder="Share your experience navigating doctor profiles, booking consultations, or exploring remedies..." required></textarea>
+          </div>
+
+          <button type="submit" id="fb-submit-btn" class="btn btn-primary">
+            <i class="fas fa-paper-plane"></i> Submit Feedback
+          </button>
+        </form>
+      </div>
+
+      <!-- Published Reviews Section -->
+      <div>
+        <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-star" style="color: #F59E0B;"></i> Community Reviews from MySQL</h3>
+        <div id="reviews-container">
+          <div style="text-align: center; padding: 2rem;">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 0.5rem; color: var(--text-secondary);">Loading verified reviews...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    let selectedRating = 5;
+
+    function initStarPicker() {
+      const stars = document.querySelectorAll('#star-picker i');
+      stars.forEach(star => {
+        star.addEventListener('click', () => {
+          selectedRating = parseInt(star.getAttribute('data-rating'), 10);
+          document.getElementById('fb-rating').value = selectedRating;
+          updateStarUI();
+        });
+      });
+    }
+
+    function updateStarUI() {
+      const stars = document.querySelectorAll('#star-picker i');
+      stars.forEach(s => {
+        const val = parseInt(s.getAttribute('data-rating'), 10);
+        if (val <= selectedRating) {
+          s.classList.add('active');
+        } else {
+          s.classList.remove('active');
+        }
+      });
+    }
+
+    async function loadFeedbackList() {
+      const container = document.getElementById('reviews-container');
+      try {
+        const res = await HealthHub.request('/api/feedback');
+        const reviews = res.feedback || [];
+
+        if (reviews.length === 0) {
+          container.innerHTML = '<div class="state-container"><p>No reviews published yet. Be the first to submit!</p></div>';
+          return;
+        }
+
+        container.innerHTML = reviews.map(r => {
+          let starHtml = '';
+          for (let i = 1; i <= 5; i++) {
+            starHtml += `<i class="fas fa-star" style="color: ${i <= r.rating ? '#F59E0B' : '#E5E7EB'}; font-size: 0.85rem;"></i>`;
+          }
+
+          return `
+            <div class="review-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div>
+                  <strong>${escapeHtml(r.name)}</strong>
+                  <div style="margin-top: 0.2rem;">${starHtml}</div>
+                </div>
+                <span style="font-size: 0.8rem; color: var(--text-secondary);">${r.created_at || 'Recently'}</span>
+              </div>
+              <p style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 0;">
+                ${escapeHtml(r.message)}
+              </p>
+            </div>
+          `;
+        }).join('');
+
+      } catch (e) {
+        container.innerHTML = '<div class="alert alert-danger">Failed to load feedback from database.</div>';
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar();
+      HealthHub.renderFooter();
+
+      initStarPicker();
+      loadFeedbackList();
+
+      const form = document.getElementById('feedback-form');
+      const submitBtn = document.getElementById('fb-submit-btn');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        HealthHub.clearAlert();
+
+        const name = document.getElementById('fb-name').value.trim();
+        const email = document.getElementById('fb-email').value.trim();
+        const rating = parseInt(document.getElementById('fb-rating').value, 10);
+        const message = document.getElementById('fb-message').value.trim();
+
+        submitBtn.disabled = true;
+
+        try {
+          const res = await HealthHub.request('/api/feedback', {
+            method: 'POST',
+            body: JSON.stringify({ name, email, rating, message })
+          });
+
+          HealthHub.renderAlert('success', res.message || 'Feedback recorded successfully!');
+          form.reset();
+          selectedRating = 5;
+          updateStarUI();
+          loadFeedbackList();
+        } catch (err) {
+          HealthHub.renderAlert('danger', err.message || 'Failed to submit feedback.');
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

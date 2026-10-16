@@ -1,0 +1,30 @@
+# Python & Virtual Environments
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Environment Variables & Secrets
+.env
+backend/.env
+*.local
+
+# Private Uploads
+backend/uploads_private/*
+!backend/uploads_private/.gitkeep
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Pytest & Coverage
+.pytest_cache/
+.coverage
+htmlcov/

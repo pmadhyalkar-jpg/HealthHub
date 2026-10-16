@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthHub - Your Health, Our Priority</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    .hero {
+      background: linear-gradient(135deg, #FFFFFF 0%, var(--light-green) 100%);
+      border-bottom: 1px solid var(--border-color);
+      padding: 4.5rem 0 3.5rem 0;
+    }
+    .hero-content {
+      max-width: 720px;
+    }
+    .hero h1 {
+      font-size: 2.85rem;
+      margin-bottom: 1.25rem;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+    .hero h1 span {
+      color: var(--primary-green);
+    }
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .step-card {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+    }
+    .step-number {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--primary-green);
+      color: #FFFFFF;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem auto;
+      font-size: 1.15rem;
+    }
+    .faq-item {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin-bottom: 1rem;
+      padding: 1.25rem;
+    }
+    .faq-question {
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .faq-question i {
+      color: var(--primary-green);
+    }
+  </style>
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+       
+        <h1>Your Health, <span>Our Priority</span></h1>
+        <p>
+          Connect with accredited medical doctors, view live consultation schedules, and explore evidence-based wellness guidance—from natural remedies and yoga to nutritional health.
+        </p>
+        <div class="hero-actions">
+          <a href="doctors.html" class="btn btn-primary btn-lg">
+            <i class="fas fa-search"></i> Explore Doctors
+          </a>
+          <a href="symptoms.html" class="btn btn-outline btn-lg">
+            <i class="fas fa-notes-medical"></i> Check Symptoms
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Features Grid (6 Feature Cards) -->
+  <section class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Comprehensive Healthcare & Wellness Modules</h2>
+        
+      </div>
+
+      <div class="grid-3">
+        <!-- 1. Find a Doctor -->
+        <div class="card">
+          <div class="icon-box">
+            <i class="fas fa-user-md"></i>
+          </div>
+          <h3>Find a Doctor</h3>
+          <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+            Browse accredited specialists across disciplines with transparent INR fees, qualifications, and verified credentials.
+          </p>
+          <div style="margin-top: auto; padding-top: 1rem;">
+            <a href="doctors.html" class="btn btn-secondary btn-sm" style="width: 100%;">
+              Search Directory <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- 2. Symptom Guidance -->
+        <div class="card">
+          <div class="icon-box">
+            <i class="fas fa-head-side-cough"></i>
+          </div>
+          <h3>Symptom Guidance</h3>
+          <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+            Understand common health symptoms, non-diagnostic self-care tips, and critical emergency red flags.
+          </p>
+          <div style="margin-top: auto; padding-top: 1rem;">
+            <a href="symptoms.html" class="btn btn-secondary btn-sm" style="width: 100%;">
+              Explore Symptoms <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- 3. Doctor Appointments -->
+        <div class="card">
+          <div class="icon-box">
+            <i class="fas fa-calendar-check"></i>
+          </div>
+          <h3>Book Appointments</h3>
+          <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+            Real-time consultation slot reservation with double-booking prevention and immediate confirmation.
+          </p>
+          <div style="margin-top: auto; padding-top: 1rem;">
+            <a href="appointments.html" class="btn btn-secondary btn-sm" style="width: 100%;">
+              Book a Slot <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- 4. Home Remedies -->
+        <div class="card">
+          <div class="icon-box">
+            <i class="fas fa-mortar-pestle"></i>
+          </div>
+          <h3>Home Remedies</h3>
+          <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+            Time-tested, cautious natural preparation guides with explicit contraindications and safety notes.
+          </p>
+          <div style="margin-top: auto; padding-top: 1rem;">
+            <a href="homeremedies.html" class="btn btn-secondary btn-sm" style="width: 100%;">
+              View Remedies <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- 5. Yoga & Wellness -->
+        <div class="card">
+          <div class="icon-box">
+            <i class="fas fa-spa"></i>
+          </div>
+          <h3>Yoga & Meditation</h3>
+          <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+            Step-by-step asanas with benefits, precautions, and verified instructional video links.
+          </p>
+          <div style="margin-top: auto; padding-top: 1rem;">
+            <a href="yoga.html" class="btn btn-secondary btn-sm" style="width: 100%;">
+              Start Practice <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- 6. Vitamins & Minerals -->
+        <div class="card">
+          <div class="icon-box">
+            <i class="fas fa-apple-alt"></i>
+          </div>
+          <h3>Vitamins & Minerals</h3>
+          <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+            Educational nutritional directory covering essential micronutrients, food sources, and deficiency signs.
+          </p>
+          <div style="margin-top: auto; padding-top: 1rem;">
+            <a href="vitamins.html" class="btn btn-secondary btn-sm" style="width: 100%;">
+              Nutritional Facts <i class="fas fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="section" style="background: #FFFFFF; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+    <div class="container">
+      <div class="section-title">
+        <h2>How HealthHub Works</h2>
+        <p>A transparent three-step journey to manage your personal health and wellness needs.</p>
+      </div>
+
+      <div class="grid-3">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Find Verified Doctors</h3>
+          <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+            Filter medical practitioners by specialization, location, or consultation fee. Every bookable doctor is reviewed by an administrator.
+          </p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Reserve Your Slot</h3>
+          <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+            Select a convenient consultation date and time slot. Our database transaction ensures zero conflicting double-bookings.
+          </p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Holistic Daily Wellness</h3>
+          <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+            Access curated lifestyle resources, home remedy preparation guides, and instructional yoga routines at your own pace.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Database-Backed Featured Doctors -->
+  <section class="section">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2>Featured Medical Specialists</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 0;">Live verified practitioners from our MySQL database.</p>
+        </div>
+        <a href="doctors.html" class="btn btn-outline btn-sm">View All Doctors <i class="fas fa-arrow-right"></i></a>
+      </div>
+
+      <div id="featured-doctors-grid" class="grid-3">
+        <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Wellness Preview Section -->
+  <section class="section" style="background: var(--light-green); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+    <div class="container">
+      <div class="section-title">
+        <h2>Yoga & Mindful Wellness Preview</h2>
+        <p>Explore foundational yogic practices with verified video guidance.</p>
+      </div>
+
+      <div id="yoga-preview-grid" class="grid-3">
+        <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 2rem;">
+        <a href="yoga.html" class="btn btn-primary">
+          <i class="fas fa-spa"></i> Explore Full Yoga & Meditation Library
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Preview -->
+  <section class="section">
+    <div class="container" style="max-width: 800px;">
+      <div class="section-title">
+        <h2>Frequently Asked Questions</h2>
+        <p>Common questions about using HealthHub.</p>
+      </div>
+
+      <div id="faq-preview-container">
+        <div style="text-align: center; padding: 2rem;">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 1.5rem;">
+        <a href="faq.html" class="btn btn-outline btn-sm">Read All FAQs</a>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    async function loadHomeData() {
+      try {
+        const res = await HealthHub.request('/api/content/home-featured');
+
+        // Render Featured Doctors
+        const docGrid = document.getElementById('featured-doctors-grid');
+        if (res.featured_doctors && res.featured_doctors.length > 0) {
+          docGrid.innerHTML = res.featured_doctors.map(d => `
+            <div class="card">
+              <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+                <div class="doctor-avatar" style="width: 52px; height: 52px; border-radius: 50%; background: var(--light-green); color: var(--primary-green); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                  <i class="fas fa-user-md"></i>
+                </div>
+                <div>
+                  <h3 style="font-size: 1.15rem; margin-bottom: 0.2rem;">${escapeHtml(d.name)}</h3>
+                  <span class="badge badge-specialty">${escapeHtml(d.specialization)}</span>
+                </div>
+              </div>
+              <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                <i class="fas fa-graduation-cap"></i> ${escapeHtml(d.qualification)}
+              </div>
+              <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                <i class="fas fa-map-marker-alt"></i> ${escapeHtml(d.city)} &bull; ${d.experience_years} Years Exp.
+              </div>
+              <div style="font-weight: 700; color: var(--primary-green); margin-bottom: 1rem;">
+                ₹${d.consultation_fee.toFixed(2)} Consultation
+              </div>
+              <div style="display: flex; gap: 0.5rem; margin-top: auto;">
+                <a href="doctor-profile.html?id=${d.id}" class="btn btn-outline btn-sm" style="flex: 1;">Profile</a>
+                <a href="appointments.html?doctor_id=${d.id}" class="btn btn-primary btn-sm" style="flex: 1;">Book Slot</a>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Render Yoga Preview
+        const yogaGrid = document.getElementById('yoga-preview-grid');
+        if (res.yoga_preview && res.yoga_preview.length > 0) {
+          yogaGrid.innerHTML = res.yoga_preview.map(p => `
+            <div class="card" style="background: #FFFFFF;">
+              <span class="badge badge-specialty" style="align-self: flex-start; margin-bottom: 0.75rem;">${p.difficulty}</span>
+              <h3>${escapeHtml(p.title)}</h3>
+              <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
+                ${escapeHtml(p.description)}
+              </p>
+              <div style="margin-top: auto; padding-top: 1rem;">
+                <a href="${p.video_url}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="width: 100%;">
+                  <i class="fab fa-youtube" style="color: #DC2626;"></i> Watch Tutorial
+                </a>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Render FAQs
+        const faqContainer = document.getElementById('faq-preview-container');
+        if (res.faqs && res.faqs.length > 0) {
+          faqContainer.innerHTML = res.faqs.map(f => `
+            <div class="faq-item">
+              <div class="faq-question">
+                <i class="fas fa-question-circle"></i>
+                <span>${escapeHtml(f.question)}</span>
+              </div>
+              <p style="color: var(--text-secondary); font-size: 0.925rem; margin-bottom: 0; padding-left: 1.5rem;">
+                ${escapeHtml(f.answer)}
+              </p>
+            </div>
+          `).join('');
+        }
+
+      } catch (e) {
+        console.warn('Failed loading home content:', e);
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar('home');
+      HealthHub.renderFooter();
+      loadHomeData();
+    });
+  </script>
+</body>
+</html>

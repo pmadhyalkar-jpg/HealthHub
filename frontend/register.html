@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container" style="max-width: 680px;">
+      <div class="card" style="box-shadow: var(--shadow-lg);">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <div class="icon-box" style="margin: 0 auto 1rem auto;">
+            <i class="fas fa-user-plus"></i>
+          </div>
+          <h2>Create Your HealthHub Account</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">Join as a Patient or register your Medical Practice</p>
+        </div>
+
+        <!-- Role Tabs -->
+        <div class="tabs-nav" style="justify-content: center;">
+          <button type="button" class="tab-btn active" id="tab-patient" onclick="switchRole('patient')">
+            <i class="fas fa-user"></i> Patient Registration
+          </button>
+          <button type="button" class="tab-btn" id="tab-doctor" onclick="switchRole('doctor')">
+            <i class="fas fa-user-md"></i> Doctor Registration
+          </button>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <form id="register-form">
+          <input type="hidden" id="selected-role" value="patient">
+
+          <!-- Common Account Info -->
+          <div class="form-group">
+            <label for="name" class="form-label">Full Name <span style="color: var(--danger)">*</span></label>
+            <input type="text" id="name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+          </div>
+
+          <div class="form-group">
+            <label for="email" class="form-label">Email Address <span style="color: var(--danger)">*</span></label>
+            <input type="email" id="email" class="form-control" placeholder="name@example.com" required autocomplete="email">
+            <div class="form-text">Used for login and appointment notifications.</div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="password" class="form-label">Password <span style="color: var(--danger)">*</span></label>
+              <input type="password" id="password" class="form-control" placeholder="Minimum 6 characters" minlength="6" required autocomplete="new-password">
+            </div>
+            <div class="form-group">
+              <label for="confirm-password" class="form-label">Confirm Password <span style="color: var(--danger)">*</span></label>
+              <input type="password" id="confirm-password" class="form-control" placeholder="Re-enter password" required autocomplete="new-password">
+            </div>
+          </div>
+
+          <!-- Patient Specific Fields -->
+          <div id="patient-fields">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="phone" class="form-label">Contact Phone</label>
+                <input type="tel" id="phone" class="form-control" placeholder="+91 98765 43210">
+              </div>
+              <div class="form-group">
+                <label for="gender" class="form-label">Gender</label>
+                <select id="gender" class="form-select">
+                  <option value="prefer_not_to_say">Prefer not to say</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="date_of_birth" class="form-label">Date of Birth</label>
+                <input type="date" id="date_of_birth" class="form-control">
+              </div>
+              <div class="form-group">
+                <label for="blood_group" class="form-label">Blood Group</label>
+                <select id="blood_group" class="form-select">
+                  <option value="">Select (Optional)</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Doctor Specific Fields -->
+          <div id="doctor-fields" style="display: none;">
+            <div class="alert alert-info" style="font-size: 0.85rem;">
+              <i class="fas fa-info-circle"></i>
+              <div>
+                <strong>Doctor Verification Notice:</strong> As a doctor, your profile will be created with <em>Pending</em> verification status. You will be able to upload your Medical Degree / Council Registration certificate from your Doctor Dashboard before accepting patient appointments.
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="specialization" class="form-label">Specialization <span style="color: var(--danger)">*</span></label>
+                <input type="text" id="specialization" class="form-control" placeholder="e.g. Cardiology, Pediatrics">
+              </div>
+              <div class="form-group">
+                <label for="qualification" class="form-label">Qualifications <span style="color: var(--danger)">*</span></label>
+                <input type="text" id="qualification" class="form-control" placeholder="e.g. MBBS, MD, DNB">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="experience_years" class="form-label">Experience (Years)</label>
+                <input type="number" id="experience_years" class="form-control" min="0" max="60" value="5">
+              </div>
+              <div class="form-group">
+                <label for="consultation_fee" class="form-label">Consultation Fee (INR ₹) <span style="color: var(--danger)">*</span></label>
+                <input type="number" id="consultation_fee" class="form-control" min="0" step="50" value="500">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="city" class="form-label">City <span style="color: var(--danger)">*</span></label>
+                <input type="text" id="city" class="form-control" placeholder="e.g. Pune, Mumbai, Bengaluru">
+              </div>
+              <div class="form-group">
+                <label for="clinic_address" class="form-label">Clinic / Hospital Address</label>
+                <input type="text" id="clinic_address" class="form-control" placeholder="e.g. Shivajinagar, Near Station">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="bio" class="form-label">Professional Summary / Bio</label>
+              <textarea id="bio" class="form-control" rows="3" placeholder="Brief introduction to your medical focus and approach to patient care."></textarea>
+            </div>
+          </div>
+
+          <button type="submit" id="submit-btn" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+            <i class="fas fa-check-circle"></i> Create Account
+          </button>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
+          Already have an account? <a href="login.html">Sign in here</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    function switchRole(role) {
+      document.getElementById('selected-role').value = role;
+      const tabPatient = document.getElementById('tab-patient');
+      const tabDoctor = document.getElementById('tab-doctor');
+      const patientFields = document.getElementById('patient-fields');
+      const doctorFields = document.getElementById('doctor-fields');
+      const submitBtn = document.getElementById('submit-btn');
+
+      if (role === 'patient') {
+        tabPatient.classList.add('active');
+        tabDoctor.classList.remove('active');
+        patientFields.style.display = 'block';
+        doctorFields.style.display = 'none';
+        submitBtn.innerHTML = '<i class="fas fa-check-circle"></i> Register as Patient';
+      } else {
+        tabDoctor.classList.add('active');
+        tabPatient.classList.remove('active');
+        patientFields.style.display = 'none';
+        doctorFields.style.display = 'block';
+        submitBtn.innerHTML = '<i class="fas fa-user-md"></i> Register as Doctor';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar();
+      HealthHub.renderFooter();
+
+      const form = document.getElementById('register-form');
+      const submitBtn = document.getElementById('submit-btn');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        HealthHub.clearAlert();
+
+        const role = document.getElementById('selected-role').value;
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+
+        if (password !== confirmPassword) {
+          HealthHub.renderAlert('danger', 'Passwords do not match. Please verify.');
+          return;
+        }
+
+        const payload = {
+          role,
+          name,
+          email,
+          password
+        };
+
+        if (role === 'patient') {
+          payload.phone = document.getElementById('phone').value.trim();
+          payload.gender = document.getElementById('gender').value;
+          payload.date_of_birth = document.getElementById('date_of_birth').value || null;
+          payload.blood_group = document.getElementById('blood_group').value;
+        } else {
+          payload.specialization = document.getElementById('specialization').value.trim();
+          payload.qualification = document.getElementById('qualification').value.trim();
+          payload.experience_years = document.getElementById('experience_years').value;
+          payload.consultation_fee = document.getElementById('consultation_fee').value;
+          payload.city = document.getElementById('city').value.trim();
+          payload.clinic_address = document.getElementById('clinic_address').value.trim();
+          payload.bio = document.getElementById('bio').value.trim();
+
+          if (!payload.specialization || !payload.qualification || !payload.city) {
+            HealthHub.renderAlert('danger', 'Please provide Specialization, Qualification, and City.');
+            return;
+          }
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading-spinner" style="width: 1.2rem; height: 1.2rem; border-width: 2px;"></span> Registering...';
+
+        try {
+          const res = await HealthHub.request('/api/auth/register', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+
+          HealthHub.renderAlert('success', res.message || 'Registration successful! Redirecting...');
+          setTimeout(() => {
+            window.location.href = res.redirect || 'login.html';
+          }, 1500);
+        } catch (err) {
+          HealthHub.renderAlert('danger', err.message || 'Registration failed.');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = role === 'doctor' ? '<i class="fas fa-user-md"></i> Register as Doctor' : '<i class="fas fa-check-circle"></i> Register as Patient';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

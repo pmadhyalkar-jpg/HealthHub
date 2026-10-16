@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Dashboard - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2 id="patient-greeting">Patient Dashboard</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 0;">Manage your scheduled doctor consultations and personal health profile.</p>
+        </div>
+        <div>
+          <a href="appointments.html" class="btn btn-primary">
+            <i class="fas fa-calendar-plus"></i> Book New Consultation
+          </a>
+        </div>
+      </div>
+
+      <div id="alert-container"></div>
+
+      <!-- Profile Overview Card -->
+      <div class="card" style="margin-bottom: 2rem; background: #FFFFFF;">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="font-size: 1.15rem;"><i class="fas fa-id-card"></i> Profile Information</h3>
+          <span class="badge badge-verified">Active Patient</span>
+        </div>
+        <div class="grid-4" id="profile-summary">
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">Full Name</div>
+            <strong id="prof-name">Loading...</strong>
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">Email</div>
+            <strong id="prof-email">Loading...</strong>
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">Contact Phone</div>
+            <strong id="prof-phone">-</strong>
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">Blood Group</div>
+            <strong id="prof-blood">-</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Appointments Section -->
+      <div class="card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3><i class="fas fa-calendar-check"></i> My Appointments History</h3>
+          <button onclick="loadAppointments()" class="btn btn-secondary btn-sm" title="Refresh">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table" id="appointments-table">
+            <thead>
+              <tr>
+                <th>Ref ID</th>
+                <th>Doctor</th>
+                <th>Specialization</th>
+                <th>Date & Time</th>
+                <th>Fee (INR)</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="appointments-tbody">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 2.5rem;">
+                  <div class="loading-spinner"></div>
+                  <p style="margin-top: 0.5rem; color: var(--text-secondary);">Loading your records from MySQL...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    async function initDashboard() {
+      const user = await HealthHub.getCurrentUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      if (user.role !== 'patient') {
+        window.location.href = user.role === 'doctor' ? 'doctor-dashboard.html' : 'admin-dashboard.html';
+        return;
+      }
+
+      document.getElementById('patient-greeting').textContent = `Welcome, ${user.name}`;
+      document.getElementById('prof-name').textContent = user.name;
+      document.getElementById('prof-email').textContent = user.email;
+
+      try {
+        const fullProfile = await HealthHub.request('/api/auth/me');
+        if (fullProfile.patient) {
+          document.getElementById('prof-phone').textContent = fullProfile.patient.phone || 'Not provided';
+          document.getElementById('prof-blood').textContent = fullProfile.patient.blood_group || 'Not specified';
+        }
+      } catch (e) {
+        console.warn('Could not fetch full profile:', e);
+      }
+
+      loadAppointments();
+    }
+
+    async function loadAppointments() {
+      const tbody = document.getElementById('appointments-tbody');
+      try {
+        const res = await HealthHub.request('/api/patient/appointments');
+        const appts = res.appointments || [];
+
+        if (appts.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-secondary);">
+                <i class="fas fa-calendar-times" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                You have not booked any consultations yet.
+                <div style="margin-top: 1rem;">
+                  <a href="appointments.html" class="btn btn-primary btn-sm">Find & Book a Doctor</a>
+                </div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = appts.map(a => {
+          let badgeClass = 'badge-pending';
+          if (a.status === 'confirmed') badgeClass = 'badge-verified';
+          else if (a.status === 'cancelled' || a.status === 'rejected') badgeClass = 'badge-rejected';
+          else if (a.status === 'completed') badgeClass = 'badge-specialty';
+
+          const canCancel = (a.status === 'pending' || a.status === 'confirmed');
+
+          return `
+            <tr>
+              <td><strong>#${a.id}</strong></td>
+              <td>
+                <strong>${escapeHtml(a.doctor_name)}</strong>
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">${escapeHtml(a.city)}</div>
+              </td>
+              <td><span class="badge badge-specialty">${escapeHtml(a.specialization)}</span></td>
+              <td>
+                <strong>${a.appointment_date}</strong>
+                <div style="font-size: 0.825rem; color: var(--text-secondary);">${a.appointment_time}</div>
+              </td>
+              <td>₹${a.consultation_fee.toFixed(2)}</td>
+              <td>
+                <span class="badge ${badgeClass}">${a.status}</span>
+              </td>
+              <td>
+                ${canCancel ? `
+                  <button onclick="cancelAppointment(${a.id})" class="btn btn-danger btn-sm" title="Cancel Booking">
+                    <i class="fas fa-times"></i> Cancel
+                  </button>
+                ` : `
+                  <span style="color: var(--text-secondary); font-size: 0.85rem;">No actions</span>
+                `}
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--danger); padding: 1.5rem;">
+              Error retrieving appointments: ${err.message || 'Server error'}
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    async function cancelAppointment(apptId) {
+      if (!confirm(`Are you sure you want to cancel appointment #${apptId}? The reserved time slot will be released.`)) {
+        return;
+      }
+
+      HealthHub.clearAlert();
+      try {
+        const res = await HealthHub.request(`/api/patient/appointments/${apptId}/cancel`, {
+          method: 'POST'
+        });
+        HealthHub.renderAlert('success', res.message || 'Appointment cancelled successfully.');
+        loadAppointments();
+      } catch (err) {
+        HealthHub.renderAlert('danger', err.message || 'Failed to cancel appointment.');
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar();
+      HealthHub.renderFooter();
+      initDashboard();
+    });
+  </script>
+</body>
+</html>

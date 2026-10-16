@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctor Dashboard - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2 id="doctor-greeting">Doctor Dashboard</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 0;">Manage your professional profile, consultation timetable, and patient appointments.</p>
+        </div>
+      </div>
+
+      <div id="alert-container"></div>
+
+      <!-- Verification Status Card -->
+      <div class="card" id="verification-banner" style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; gap: 1rem; align-items: center;">
+            <div id="status-icon" style="font-size: 2.25rem;"></div>
+            <div>
+              <h3 id="status-heading" style="margin-bottom: 0.25rem;">Verification Status</h3>
+              <p id="status-desc" style="color: var(--text-secondary); margin-bottom: 0;"></p>
+            </div>
+          </div>
+          <div id="rejection-box" style="display: none; width: 100%; margin-top: 1rem; padding: 1rem; background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-md); color: #991B1B;">
+            <strong><i class="fas fa-exclamation-triangle"></i> Administrator Rejection Reason:</strong>
+            <div id="rejection-reason-text" style="margin-top: 0.25rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="tabs-nav">
+        <button type="button" class="tab-btn active" id="tab-appts" onclick="switchDashboardTab('appts')">
+          <i class="fas fa-calendar-check"></i> Patient Appointments
+        </button>
+        <button type="button" class="tab-btn" id="tab-avail" onclick="switchDashboardTab('avail')">
+          <i class="fas fa-clock"></i> Weekly Consultation Slots
+        </button>
+        <button type="button" class="tab-btn" id="tab-cert" onclick="switchDashboardTab('cert')">
+          <i class="fas fa-certificate"></i> Certificate Document
+        </button>
+        <button type="button" class="tab-btn" id="tab-prof" onclick="switchDashboardTab('prof')">
+          <i class="fas fa-user-edit"></i> Edit Practice Profile
+        </button>
+      </div>
+
+      <!-- Tab 1: Appointments -->
+      <div id="content-appts">
+        <div class="card">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Assigned Patient Consultations</h3>
+            <button onclick="loadDoctorAppointments()" class="btn btn-secondary btn-sm">
+              <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Ref ID</th>
+                  <th>Patient Name</th>
+                  <th>Contact Info</th>
+                  <th>Date & Time</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="doctor-appts-tbody">
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 2.5rem;">
+                    <div class="loading-spinner"></div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Availability Schedule -->
+      <div id="content-avail" style="display: none;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+          <div class="card">
+            <div class="card-header">
+              <h3>Current Consultation Timetable</h3>
+              <p style="color: var(--text-secondary); font-size: 0.875rem;">Weekly recurring hours from which 30-min patient slots are calculated.</p>
+            </div>
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Day</th>
+                    <th>Hours</th>
+                    <th>Slot Duration</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="avail-tbody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Add Schedule Form -->
+          <div class="card">
+            <div class="card-header">
+              <h4>Add Weekly Hours</h4>
+            </div>
+            <form id="add-avail-form">
+              <div class="form-group">
+                <label for="avail-day" class="form-label">Day of Week</label>
+                <select id="avail-day" class="form-select" required>
+                  <option value="Monday">Monday</option>
+                  <option value="Tuesday">Tuesday</option>
+                  <option value="Wednesday">Wednesday</option>
+                  <option value="Thursday">Thursday</option>
+                  <option value="Friday">Friday</option>
+                  <option value="Saturday">Saturday</option>
+                  <option value="Sunday">Sunday</option>
+                </select>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                  <label for="avail-start" class="form-label">Start Time</label>
+                  <input type="time" id="avail-start" class="form-control" value="09:00" required>
+                </div>
+                <div class="form-group">
+                  <label for="avail-end" class="form-label">End Time</label>
+                  <input type="time" id="avail-end" class="form-control" value="13:00" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="avail-duration" class="form-label">Slot Duration (Mins)</label>
+                <select id="avail-duration" class="form-select">
+                  <option value="30">30 Minutes</option>
+                  <option value="45">45 Minutes</option>
+                  <option value="60">60 Minutes</option>
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <i class="fas fa-plus"></i> Add Consultation Hours
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Certificate Upload / Management -->
+      <div id="content-cert" style="display: none;">
+        <div class="card" style="max-width: 720px; margin: 0 auto;">
+          <div class="card-header">
+            <h3>Medical Certificate & License Verification</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">
+              Upload your State Medical Council registration or degree certificate (PDF, JPG, PNG &le; 5MB).
+            </p>
+          </div>
+
+          <div id="current-cert-box" style="margin-bottom: 1.5rem; padding: 1.25rem; background: var(--light-green); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <strong id="cert-filename">No certificate on file.</strong>
+                <div id="cert-meta" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;"></div>
+              </div>
+              <div id="cert-action-btn"></div>
+            </div>
+          </div>
+
+          <form id="cert-upload-form" enctype="multipart/form-data">
+            <div class="form-group">
+              <label for="certificate_type" class="form-label">Certificate / Credential Type</label>
+              <select id="certificate_type" name="certificate_type" class="form-select">
+                <option value="Medical Council Permanent Registration">State Medical Council Permanent Registration</option>
+                <option value="Medical Degree Certificate (MBBS / MD / MS / DNB)">Medical Degree Certificate (MBBS / MD / MS / DNB)</option>
+                <option value="Clinical Fellowship Credential">Clinical Fellowship Credential</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="cert-file" class="form-label">Select Document (PDF, JPG, PNG &le; 5MB) <span style="color: var(--danger)">*</span></label>
+              <input type="file" id="cert-file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+              <div class="form-text">Server strictly verifies file signatures to protect against malicious uploads.</div>
+            </div>
+
+            <button type="submit" id="cert-submit-btn" class="btn btn-primary" style="width: 100%;">
+              <i class="fas fa-upload"></i> Upload & Submit for Review
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tab 4: Profile Edit -->
+      <div id="content-prof" style="display: none;">
+        <div class="card" style="max-width: 720px; margin: 0 auto;">
+          <div class="card-header">
+            <h3>Update Practice Information</h3>
+          </div>
+          <form id="profile-edit-form">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="edit-spec" class="form-label">Specialization</label>
+                <input type="text" id="edit-spec" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="edit-qual" class="form-label">Qualifications</label>
+                <input type="text" id="edit-qual" class="form-control" required>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="edit-exp" class="form-label">Experience (Years)</label>
+                <input type="number" id="edit-exp" class="form-control" min="0" required>
+              </div>
+              <div class="form-group">
+                <label for="edit-fee" class="form-label">Consultation Fee (INR ₹)</label>
+                <input type="number" id="edit-fee" class="form-control" min="0" step="50" required>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="edit-city" class="form-label">City</label>
+                <input type="text" id="edit-city" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label for="edit-clinic" class="form-label">Clinic Address</label>
+                <input type="text" id="edit-clinic" class="form-control">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="edit-bio" class="form-label">Professional Biography</label>
+              <textarea id="edit-bio" class="form-control" rows="4"></textarea>
+            </div>
+
+            <button type="submit" id="save-prof-btn" class="btn btn-primary" style="width: 100%;">
+              <i class="fas fa-save"></i> Save Profile Changes
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    let doctorProfile = null;
+
+    function switchDashboardTab(tabId) {
+      ['appts', 'avail', 'cert', 'prof'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.remove('active');
+        document.getElementById(`content-${t}`).style.display = 'none';
+      });
+
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      document.getElementById(`content-${tabId}`).style.display = 'block';
+    }
+
+    async function initDoctorDashboard() {
+      const user = await HealthHub.getCurrentUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      if (user.role !== 'doctor') {
+        window.location.href = user.role === 'admin' ? 'admin-dashboard.html' : 'patient-dashboard.html';
+        return;
+      }
+
+      document.getElementById('doctor-greeting').textContent = `Doctor Dashboard - ${user.name}`;
+
+      loadProfileAndStatus();
+      loadDoctorAppointments();
+    }
+
+    async function loadProfileAndStatus() {
+      try {
+        const res = await HealthHub.request('/api/doctors/my-profile');
+        doctorProfile = res.doctor;
+
+        // Render Status Banner
+        const vBanner = document.getElementById('verification-banner');
+        const sIcon = document.getElementById('status-icon');
+        const sHead = document.getElementById('status-heading');
+        const sDesc = document.getElementById('status-desc');
+        const rejBox = document.getElementById('rejection-box');
+
+        if (doctorProfile.verification_status === 'verified') {
+          vBanner.style.borderColor = 'var(--success)';
+          sIcon.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success);"></i>';
+          sHead.textContent = 'Account Status: Verified';
+          sDesc.textContent = 'Your medical credentials are verified. Your profile is live in the directory and patients can book appointments.';
+          rejBox.style.display = 'none';
+        } else if (doctorProfile.verification_status === 'pending') {
+          vBanner.style.borderColor = 'var(--warning)';
+          sIcon.innerHTML = '<i class="fas fa-clock" style="color: var(--warning);"></i>';
+          sHead.textContent = 'Account Status: Pending Verification';
+          sDesc.textContent = 'Your certificate document is awaiting review by a platform administrator. Your profile will become bookable once verified.';
+          rejBox.style.display = 'none';
+        } else {
+          vBanner.style.borderColor = 'var(--danger)';
+          sIcon.innerHTML = '<i class="fas fa-times-circle" style="color: var(--danger);"></i>';
+          sHead.textContent = 'Account Status: Registration Rejected';
+          sDesc.textContent = 'Your certificate did not meet verification criteria. You may review the administrator reason below and submit a replacement document.';
+          rejBox.style.display = 'block';
+          document.getElementById('rejection-reason-text').textContent = (doctorProfile.certificate && doctorProfile.certificate.rejection_reason) || 'Credentials could not be verified.';
+        }
+
+        // Render Certificate Box
+        const certBox = document.getElementById('current-cert-box');
+        const certFile = document.getElementById('cert-filename');
+        const certMeta = document.getElementById('cert-meta');
+        const certAction = document.getElementById('cert-action-btn');
+
+        if (doctorProfile.certificate) {
+          const c = doctorProfile.certificate;
+          certFile.textContent = c.original_filename;
+          certMeta.textContent = `Type: ${c.certificate_type} | Size: ${(c.file_size / 1024).toFixed(1)} KB | Status: ${c.status.toUpperCase()}`;
+          certAction.innerHTML = `
+            <a href="/api/certificates/${c.id}/download" target="_blank" class="btn btn-outline btn-sm">
+              <i class="fas fa-file-download"></i> View / Preview
+            </a>
+          `;
+        } else {
+          certFile.textContent = 'No certificate document uploaded yet.';
+          certMeta.textContent = 'Please upload a medical degree or council registration document to enable patient bookings.';
+          certAction.innerHTML = '';
+        }
+
+        // Fill Profile Form
+        document.getElementById('edit-spec').value = doctorProfile.specialization || '';
+        document.getElementById('edit-qual').value = doctorProfile.qualification || '';
+        document.getElementById('edit-exp').value = doctorProfile.experience_years || 0;
+        document.getElementById('edit-fee').value = doctorProfile.consultation_fee || 500;
+        document.getElementById('edit-city').value = doctorProfile.city || '';
+        document.getElementById('edit-clinic').value = doctorProfile.clinic_address || '';
+        document.getElementById('edit-bio').value = doctorProfile.bio || '';
+
+        // Render Availability Schedule
+        renderAvailabilityList(doctorProfile.availability || []);
+
+      } catch (err) {
+        HealthHub.renderAlert('danger', err.message || 'Error loading profile.');
+      }
+    }
+
+    function renderAvailabilityList(availList) {
+      const tbody = document.getElementById('avail-tbody');
+      if (availList.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 1.5rem;">
+              No consultation hours added yet. Use the form on the right to set up your weekly schedule.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = availList.map(a => `
+        <tr>
+          <td><strong>${escapeHtml(a.day_of_week)}</strong></td>
+          <td>${a.start_time} - ${a.end_time}</td>
+          <td>${a.slot_duration_minutes} Mins</td>
+          <td>
+            <button onclick="deleteAvailSlot(${a.id})" class="btn btn-danger btn-sm" title="Remove Hours">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function deleteAvailSlot(slotId) {
+      if (!confirm('Remove this consultation schedule?')) return;
+      try {
+        await HealthHub.request(`/api/doctor/availability/${slotId}`, { method: 'DELETE' });
+        HealthHub.renderAlert('success', 'Consultation hours removed.');
+        loadProfileAndStatus();
+      } catch (err) {
+        HealthHub.renderAlert('danger', err.message || 'Failed to remove schedule.');
+      }
+    }
+
+    async function loadDoctorAppointments() {
+      const tbody = document.getElementById('doctor-appts-tbody');
+      try {
+        const res = await HealthHub.request('/api/doctor/appointments');
+        const appts = res.appointments || [];
+
+        if (appts.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 2.5rem; color: var(--text-secondary);">
+                <i class="fas fa-calendar-check" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                No upcoming or past patient consultations on record.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = appts.map(a => {
+          let badgeClass = 'badge-pending';
+          if (a.status === 'confirmed') badgeClass = 'badge-verified';
+          else if (a.status === 'cancelled' || a.status === 'rejected') badgeClass = 'badge-rejected';
+          else if (a.status === 'completed') badgeClass = 'badge-specialty';
+
+          const isActive = (a.status === 'confirmed' || a.status === 'pending');
+
+          return `
+            <tr>
+              <td><strong>#${a.id}</strong></td>
+              <td>
+                <strong>${escapeHtml(a.patient_name)}</strong>
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">${escapeHtml(a.patient_gender)} &bull; ${escapeHtml(a.patient_blood_group || 'Blood N/A')}</div>
+              </td>
+              <td>
+                <div>${escapeHtml(a.patient_phone || '-')}</div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">${escapeHtml(a.patient_email)}</div>
+              </td>
+              <td>
+                <strong>${a.appointment_date}</strong>
+                <div style="font-size: 0.825rem; color: var(--text-secondary);">${a.appointment_time}</div>
+              </td>
+              <td>${escapeHtml(a.reason || 'General Health Consultation')}</td>
+              <td><span class="badge ${badgeClass}">${a.status}</span></td>
+              <td>
+                ${isActive ? `
+                  <div style="display: flex; gap: 0.35rem;">
+                    <button onclick="updateStatus(${a.id}, 'completed')" class="btn btn-primary btn-sm" title="Mark Completed">
+                      <i class="fas fa-check"></i> Complete
+                    </button>
+                    <button onclick="updateStatus(${a.id}, 'rejected')" class="btn btn-danger btn-sm" title="Decline">
+                      <i class="fas fa-times"></i> Reject
+                    </button>
+                  </div>
+                ` : `
+                  <span style="color: var(--text-secondary); font-size: 0.85rem;">Completed/Closed</span>
+                `}
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; color: var(--danger); padding: 1.5rem;">
+              Error retrieving appointments: ${err.message || 'Server error'}
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    async function updateStatus(apptId, newStatus) {
+      if (!confirm(`Mark appointment #${apptId} as ${newStatus}?`)) return;
+      try {
+        const res = await HealthHub.request(`/api/doctor/appointments/${apptId}/status`, {
+          method: 'POST',
+          body: JSON.stringify({ status: newStatus })
+        });
+        HealthHub.renderAlert('success', res.message);
+        loadDoctorAppointments();
+      } catch (err) {
+        HealthHub.renderAlert('danger', err.message || 'Status update failed.');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar();
+      HealthHub.renderFooter();
+      initDoctorDashboard();
+
+      // Certificate Upload Form Handler
+      document.getElementById('cert-upload-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        HealthHub.clearAlert();
+
+        const fileInput = document.getElementById('cert-file');
+        if (!fileInput.files || fileInput.files.length === 0) {
+          HealthHub.renderAlert('danger', 'Please choose a document file to upload.');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('certificate_type', document.getElementById('certificate_type').value);
+
+        const btn = document.getElementById('cert-submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner" style="width: 1.2rem; height: 1.2rem; border-width: 2px;"></span> Uploading & Inspecting...';
+
+        try {
+          const res = await HealthHub.request('/api/certificates/upload', {
+            method: 'POST',
+            body: formData,
+            isFormData: true
+          });
+
+          HealthHub.renderAlert('success', res.message || 'Certificate uploaded successfully.');
+          fileInput.value = '';
+          loadProfileAndStatus();
+        } catch (err) {
+          HealthHub.renderAlert('danger', err.message || 'Certificate upload failed.');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-upload"></i> Upload & Submit for Review';
+        }
+      });
+
+      // Add Availability Form Handler
+      document.getElementById('add-avail-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        HealthHub.clearAlert();
+
+        const payload = {
+          day_of_week: document.getElementById('avail-day').value,
+          start_time: document.getElementById('avail-start').value,
+          end_time: document.getElementById('avail-end').value,
+          slot_duration_minutes: parseInt(document.getElementById('avail-duration').value, 10)
+        };
+
+        try {
+          const res = await HealthHub.request('/api/doctor/availability', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          HealthHub.renderAlert('success', res.message);
+          loadProfileAndStatus();
+        } catch (err) {
+          HealthHub.renderAlert('danger', err.message || 'Failed adding schedule.');
+        }
+      });
+
+      // Edit Profile Form Handler
+      document.getElementById('profile-edit-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        HealthHub.clearAlert();
+
+        const payload = {
+          specialization: document.getElementById('edit-spec').value.trim(),
+          qualification: document.getElementById('edit-qual').value.trim(),
+          experience_years: parseInt(document.getElementById('edit-exp').value, 10),
+          consultation_fee: parseFloat(document.getElementById('edit-fee').value),
+          city: document.getElementById('edit-city').value.trim(),
+          clinic_address: document.getElementById('edit-clinic').value.trim(),
+          bio: document.getElementById('edit-bio').value.trim()
+        };
+
+        const btn = document.getElementById('save-prof-btn');
+        btn.disabled = true;
+
+        try {
+          const res = await HealthHub.request('/api/doctors/my-profile', {
+            method: 'PUT',
+            body: JSON.stringify(payload)
+          });
+          HealthHub.renderAlert('success', res.message);
+        } catch (err) {
+          HealthHub.renderAlert('danger', err.message || 'Failed updating profile.');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>

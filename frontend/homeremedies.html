@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Remedies - HealthHub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+  <div id="disclaimer-banner-placeholder"></div>
+  <div id="navbar-placeholder"></div>
+
+  <main class="section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Curated Home Wellness Remedies</h2>
+        <p>Explore traditional natural remedies, practical step-by-step preparation, and important contraindications to promote safe daily wellness.</p>
+      </div>
+
+      <div class="alert alert-info" style="margin-bottom: 2rem;">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <strong>Safety Precaution:</strong> Home remedies are intended to support comfort and minor symptom relief. They are not guaranteed clinical treatments. Always consult your physician if symptoms persist or worsen.
+        </div>
+      </div>
+
+      <div id="remedies-grid" class="grid-2">
+        <div style="grid-column: 1/-1; text-align: center; padding: 3rem;">
+          <div class="loading-spinner"></div>
+          <p style="margin-top: 1rem; color: var(--text-secondary);">Loading home remedies from MySQL...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="assets/js/api.js"></script>
+  <script>
+    async function loadRemedies() {
+      const grid = document.getElementById('remedies-grid');
+      try {
+        const res = await HealthHub.request('/api/content/home-remedies');
+        const remedies = res.remedies || [];
+
+        if (remedies.length === 0) {
+          grid.innerHTML = '<div class="state-container" style="grid-column: 1/-1;"><p>No remedies found in the database.</p></div>';
+          return;
+        }
+
+        grid.innerHTML = remedies.map(r => `
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+              <h3 style="font-size: 1.25rem;">${escapeHtml(r.title)}</h3>
+              <span class="badge badge-specialty">${escapeHtml(r.category)}</span>
+            </div>
+
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1rem;">
+              ${escapeHtml(r.description)}
+            </p>
+
+            <div style="margin-bottom: 1rem; background: var(--light-green); padding: 1rem; border-radius: var(--radius-md);">
+              <strong style="color: var(--dark-green); display: block; margin-bottom: 0.35rem;">
+                <i class="fas fa-mortar-pestle"></i> Preparation & Method:
+              </strong>
+              <div style="font-size: 0.9rem; color: var(--text-main);">
+                ${escapeHtml(r.preparation)}
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1rem; padding: 0.85rem; background: #FFFBEB; border-radius: var(--radius-md); border: 1px solid #FDE68A;">
+              <strong style="color: #92400E; display: block; margin-bottom: 0.25rem; font-size: 0.875rem;">
+                <i class="fas fa-check-shield"></i> Safety & Usage Notes:
+              </strong>
+              <div style="font-size: 0.875rem; color: #78350F;">
+                ${escapeHtml(r.safety_notes)}
+              </div>
+            </div>
+
+            ${r.contraindications ? `
+              <div style="background: #FEF2F2; padding: 0.85rem; border-radius: var(--radius-md); border: 1px solid #FECACA; margin-top: auto;">
+                <strong style="color: #991B1B; display: block; margin-bottom: 0.25rem; font-size: 0.875rem;">
+                  <i class="fas fa-ban"></i> Contraindications:
+                </strong>
+                <div style="font-size: 0.85rem; color: #7F1D1D;">
+                  ${escapeHtml(r.contraindications)}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+
+      } catch (err) {
+        grid.innerHTML = '<div class="alert alert-danger" style="grid-column: 1/-1;">Error loading home remedies.</div>';
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      HealthHub.renderDisclaimerBanner();
+      HealthHub.renderNavbar('homeremedies');
+      HealthHub.renderFooter();
+      loadRemedies();
+    });
+  </script>
+</body>
+</html>
